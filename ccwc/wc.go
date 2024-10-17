@@ -30,7 +30,8 @@ func main() {
 	}
 
 	// https://stackoverflow.com/questions/1821811/how-to-read-write-from-to-a-file-using-go
-	count := int64(0)
+	byteCount := int64(0)
+	lineCount := 0
 
 	inputFile, err := os.Open(flag.Arg(0))
     if err != nil {
@@ -57,8 +58,14 @@ func main() {
             break
         }
 
-        count += int64(n)
+		for _, b := range buf[:n] {
+			if b == '\n' {
+				lineCount += 1
+			}
+		}
+
+        byteCount += int64(n)
     }
 
-	fmt.Printf("%6d %s\n", count, flag.Arg(0))
+	fmt.Printf("%6d bytes, %6d lines in %s\n", byteCount, lineCount, flag.Arg(0))
 }
