@@ -15,16 +15,24 @@ func main() {
 
 	if !*characters {
 		fmt.Fprintln(os.Stderr, "Only the -c option is accepted.")
+		// TODO: What does 
+		os.Exit(0)
 	}
 
 	if len(flag.Args()) > 1 {
 		os.Stderr.WriteString("Only one file is currently accepted.")
+		os.Exit(0)
+	}
+
+	if len(flag.Args()) == 0 {
+		os.Stderr.WriteString("At least one file must be specified.")
+		os.Exit(0)
 	}
 
 	// https://stackoverflow.com/questions/1821811/how-to-read-write-from-to-a-file-using-go
 	count := int64(0)
 
-	inputFile, err := os.Create(flag.Arg(0))
+	inputFile, err := os.Open(flag.Arg(0))
     if err != nil {
         panic(err)
     }
@@ -52,5 +60,5 @@ func main() {
         count += int64(n)
     }
 
-	fmt.Printf("%d", count)
+	fmt.Printf("%6d %s\n", count, flag.Arg(0))
 }
