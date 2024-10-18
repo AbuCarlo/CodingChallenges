@@ -10,7 +10,7 @@
             "request": "launch",
             "mode": "auto",
             "program": "${fileDirname}",
-            "args": ["-c", "README.md"]
+            "args": ["-c", "test-files/Project Gutenberg - Art of War - UTF-8.txt"]
         }
     ]
 }
