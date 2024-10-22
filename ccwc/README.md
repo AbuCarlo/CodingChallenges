@@ -6,6 +6,8 @@ The problem is specified here: https://codingchallenges.substack.com/p/coding-ch
 
 All functionality described here is implemented: https://man7.org/linux/man-pages/man1/wc.1.html
 
+The source for `wc` is at https://github.com/coreutils/coreutils/blob/master/src/wc.c.
+
 BSD-style options with two dashes, i.e. `--byte-count`, are not supported, since they're not 
 idiomatic to Go.
 
@@ -84,6 +86,21 @@ Large books:
   14072  154885  913066 Mahabharata trans. Ganguli.txt
    7143   58164  342160 Art of War - English - UTF-8.txt
   64500  643328 3646947 total
+```
+
+What does `wc` do if `-` is given as a file name (meaning standard input)?
+You can see that the first call had to be killed. The second works (the
+filename is listed in the totals as "-")
+
+```bash
+[ec2-user@ip-172-31-52-82 ~]$ wc 'Art of War - English - UTF-8.txt' - 
+   7143   58164  342160 Art of War - English - UTF-8.txt
+^C
+[ec2-user@ip-172-31-52-82 ~]$ echo Hello | !!
+echo Hello | wc 'Art of War - English - UTF-8.txt' - 
+   7143   58164  342160 Art of War - English - UTF-8.txt
+      1       1       6 -
+   7144   58165  342166 total
 ```
 
 
