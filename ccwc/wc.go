@@ -28,9 +28,14 @@ func readSingleFileInternal(f string) WcResult {
 		return result
 	}
 
-	// The default buffer size is 4K. Performance test?
-	// TODO: https://www.reddit.com/r/golang/comments/i1cro6/on_choosing_a_buffer_size/
-	r := bufio.NewReaderSize(inputFile, 65536)
+	var r *bufio.Reader
+	if f == "-" {
+		r = bufio.NewReader(os.Stdin)
+	} else {
+		// The default buffer size is 4K. Performance test?
+		// TODO: https://www.reddit.com/r/golang/comments/i1cro6/on_choosing_a_buffer_size/
+		 r = bufio.NewReaderSize(inputFile, 65536)
+	}
 
 	for {
 		s, err := r.ReadString('\n')
@@ -60,8 +65,8 @@ func readSingleFile(f string, c chan<- WcResult) {
 	close(c)
 }
 
-func printSingleFile(result WcResult) {
-	fmt.Printf("%6d bytes, %6d chars, %6d lines in %s\n", result.bites, result.chars, result.lines, result.f)
+func printSingleFile(w io.Writer, result WcResult) {
+	fmt.Fprintf(w, "%6d bytes, %6d chars, %6d lines in %s\n", result.bites, result.chars, result.lines, result.f)
 }
 
 func countDecimalChars[I constraints.Integer](in I) int {
@@ -86,7 +91,7 @@ func adjustPrintWidth(w int) int {
 
 func printSingleFiles(results []WcResult, w io.Writer) {
 	if len(results) == 1 {
-		printSingleFile(results[0])
+		printSingleFile(os.Stdout, results[0])
 		return
 	}
 	// According to https://man7.org/linux/man-pages/man1/wc.1p.html
@@ -106,7 +111,7 @@ func printSingleFiles(results []WcResult, w io.Writer) {
 	maxLinesLength := adjustPrintWidth(countDecimalChars(totalLines))
 	// There will be more bytes than anything else.
 	for _, result := range results {
-		fmt.Printf("%*d %*d %*d %s\n", maxLinesLength, result.lines, maxCharLength, result.chars, maxByteLength, result.bites, result.f)
+		fmt.Fprintf(w, "%*d %*d %*d %s\n", maxLinesLength, result.lines, maxCharLength, result.chars, maxByteLength, result.bites, result.f)
 	}
 
 	/*
@@ -120,7 +125,7 @@ func printSingleFiles(results []WcResult, w io.Writer) {
        replace the <bytes> field in this format.
 	*/
 
-	fmt.Printf("%*d %*d %*d total\n", maxLinesLength, totalLines, maxCharLength, totalChars, maxByteLength, totalBytes)
+	fmt.Fprintf(w, "%*d %*d %*d total\n", maxLinesLength, totalLines, maxCharLength, totalChars, maxByteLength, totalBytes)
 }
 
 func main() {
@@ -140,17 +145,14 @@ func main() {
 		os.Exit(0)
 	}
 
-	if len(flag.Args()) > 1 {
-		os.Stderr.WriteString("Only one file is currently accepted.")
-		os.Exit(0)
-	}
-
-	if len(flag.Args()) == 0 {
-		os.Stderr.WriteString("At least one file must be specified.")
-		os.Exit(0)
-	}
-
 	var channels []chan WcResult
+	if len(flag.Args()) == 0 {
+		c := make(chan WcResult)
+		channels = append(channels, c)
+		// This is how it appears in columnar output.
+		go readSingleFile("-", c)
+	}
+
 	for _, f := range flag.Args() {
 		c := make(chan WcResult)
 		channels = append(channels, c)
