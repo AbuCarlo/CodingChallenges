@@ -9,6 +9,8 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
+import _ "embed"
+
 type WcResult struct {
 	f     string
 	bites int64
@@ -128,21 +130,38 @@ func printSingleFiles(results []WcResult, w io.Writer) {
 	fmt.Fprintf(w, "%*d %*d %*d total\n", maxLinesLength, totalLines, maxCharLength, totalChars, maxByteLength, totalBytes)
 }
 
+//go:embed wc-help.md
+var usage string
+
 func main() {
 	// wc prints only byte counts by default.
+	help := flag.Bool("h", false, "display this help and exit")
 	characters := flag.Bool("c", false, "print the character counts")
 	// bites := flag.Bool("b", true, "print the byte counts")
 	// newlines := flag.Bool("l", true, "print the newline counts")
 	// maximumWidths = flag.Bool("L", false, "print the maximum display width")
 
+	flag.Usage = func() {
+		fmt.Fprint(os.Stderr, usage)
+		os.Exit(1)
+	}
+
 	flag.Parse()
 
+	if *help {
+		// TODO: Explain the discrepancy from POSIX.
+		flag.CommandLine.Output().Write([]byte(usage))
+		os.Exit(0)
+	}
+
+	// On controlling the usage output better:
 	// https://stackoverflow.com/a/23726033/476942
 
 	if !*characters {
 		fmt.Fprintln(os.Stderr, "Only the -c option is accepted.")
-		// TODO: What does wc do?
-		os.Exit(0)
+		// wc returns 1 for invalid options. It also returns 1
+		// for missing files.
+		os.Exit(1)
 	}
 
 	var channels []chan WcResult
