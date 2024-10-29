@@ -6,16 +6,18 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"unicode"
+
 	"golang.org/x/exp/constraints"
+
+	_ "embed"
 )
 
-import _ "embed"
-
 type WcResult struct {
-	f     string
-	bites int64
-	chars int64
-	// words int
+	f       string
+	bites   int64
+	chars   int64
+	words   int
 	lines   int
 	longest int
 	err     error
@@ -36,7 +38,7 @@ func readSingleFileInternal(f string) WcResult {
 	} else {
 		// The default buffer size is 4K. Performance test?
 		// TODO: https://www.reddit.com/r/golang/comments/i1cro6/on_choosing_a_buffer_size/
-		 r = bufio.NewReaderSize(inputFile, 65536)
+		r = bufio.NewReaderSize(inputFile, 65536)
 	}
 
 	for {
@@ -47,6 +49,8 @@ func readSingleFileInternal(f string) WcResult {
 		if err == io.EOF {
 			break
 		}
+
+		result.words += countWords(s)
 		result.bites += int64(r.Buffered())
 		result.chars += int64(len(s))
 		result.lines += 1
@@ -59,6 +63,27 @@ func readSingleFileInternal(f string) WcResult {
 	}
 
 	return result
+}
+
+func countWords(s string) int {
+	/*
+		From the man page: "A word is a non-zero-length sequence of characters delimited by white space.
+
+		Let's treat the first non-whitespace character of a line as being preceded by whitespace.
+	*/
+	wasWhitespace := true
+	words := 0
+	for _, r := range s {
+		if !unicode.IsSpace(r) {
+			if wasWhitespace {
+				words += 1
+			}
+			wasWhitespace = false
+		} else {
+			wasWhitespace = true
+		}
+	}
+	return words
 }
 
 func readSingleFile(f string, c chan<- WcResult) {
@@ -75,12 +100,12 @@ func countDecimalChars[I constraints.Integer](in I) int {
 	// Hat tip to https://stackoverflow.com/a/68124773/476942
 	// I've removed the overflow check, since we're not going
 	// to encounter numbers > 1e18.
-    x, count := I(10), 1
-    for x <= in {
-        x *= 10
-        count++
-    }
-    return count
+	x, count := I(10), 1
+	for x <= in {
+		x *= 10
+		count++
+	}
+	return count
 }
 
 func adjustPrintWidth(w int) int {
@@ -118,13 +143,13 @@ func printSingleFiles(results []WcResult, w io.Writer) {
 
 	/*
 
-	   By default, the standard output shall contain an entry for each
-       input file of the form:
+			   By default, the standard output shall contain an entry for each
+		       input file of the form:
 
-           "%d %d %d %s\n", <newlines>, <words>, <bytes>, <file>
+		           "%d %d %d %s\n", <newlines>, <words>, <bytes>, <file>
 
-       If the -m option is specified, the number of characters shall
-       replace the <bytes> field in this format.
+		       If the -m option is specified, the number of characters shall
+		       replace the <bytes> field in this format.
 	*/
 
 	fmt.Fprintf(w, "%*d %*d %*d total\n", maxLinesLength, totalLines, maxCharLength, totalChars, maxByteLength, totalBytes)
