@@ -8,10 +8,56 @@ All functionality described here is implemented: https://man7.org/linux/man-page
 
 The source for `wc` is at https://github.com/coreutils/coreutils/blob/master/src/wc.c.
 
-BSD-style options with two dashes, i.e. `--byte-count`, are not supported, since they're not 
-idiomatic to Go.
+I have deliberately replicated certain oddities of `wc`. However, BSD-style options with two dashes, e.g. `--byte-count`, are not supported, since they're not 
+idiomatic to Go. `-c` means bytes (or ASCII characters); `-m` means characters (at the moment
+only UTF-8 input is supported).
 
 I have verified that `wc` will not read from `STDIN` if you tell it to read files, to wit:
+
+```bash
+[ec2-user@ip-172-31-52-82 ~]$ wc -m Art\ of\ War\ -\ English\ -\ UTF-8.txt 
+339262 Art of War - English - UTF-8.txt
+[ec2-user@ip-172-31-52-82 ~]$ wc Art\ of\ War\ -\ English\ -\ UTF-8.txt 
+  7143  58164 342160 Art of War - English - UTF-8.txt
+[ec2-user@ip-172-31-52-82 ~]$ echo Hello | !!
+echo Hello | wc Art\ of\ War\ -\ English\ -\ UTF-8.txt 
+  7143  58164 342160 Art of War - English - UTF-8.txt
+[ec2-user@ip-172-31-52-82 ~]$ echo Hello | wc Art\ of\ War\ -\ English\ -\ UTF-8.txt -
+   7143   58164  342160 Art of War - English - UTF-8.txt
+      1       1       6 -
+   7144   58165  342166 total
+```
+
+The order of the options on the command line does not affect the output:
+
+```bash
+[ec2-user@ip-172-31-52-82 ~]$ wc -c -m -l -L -w Art\ of\ War\ -\ English\ -\ UTF-8.txt 
+  7143  58164 339262 342160     78 Art of War - English - UTF-8.txt
+[ec2-user@ip-172-31-52-82 ~]$ wc -l -L -w Art\ of\ War\ -\ English\ -\ UTF-8.txt 
+  7143  58164     78 Art of War - English - UTF-8.txt
+[ec2-user@ip-172-31-52-82 ~]$ 
+```
+
+Since my code never sees the terminating newlines, we're going to have some trouble counting newlines rather than lines. Can we use https://pkg.go.dev/bufio#Reader.UnreadByte for this?
+
+```bash
+[ec2-user@ip-172-31-52-82 ~]$ echo -n Hello | wc -l
+0
+[ec2-user@ip-172-31-52-82 ~]$ echo Hello | wc 
+      1       1       6
+[ec2-user@ip-172-31-52-82 ~]$ echo -n Hello | wc
+      0       1       5
+```
+
+Supposedly `wc -m` prints the default output with bytes replaced by chars, but this is _not_ what happens:
+
+```bash
+[ec2-user@ip-172-31-52-82 ~]$ wc -m Art\ of\ War\ -\ English\ -\ UTF-8.txt 
+339262 Art of War - English - UTF-8.txt
+[ec2-user@ip-172-31-52-82 ~]$ wc Art\ of\ War\ -\ English\ -\ UTF-8.txt 
+  7143  58164 342160 Art of War - English - UTF-8.txt
+```
+
 
 ```bash
 [ec2-user@ip-172-31-52-82 ~]$ echo Hello | wc
@@ -103,4 +149,15 @@ echo Hello | wc 'Art of War - English - UTF-8.txt' -
    7144   58165  342166 total
 ```
 
+Version information:
 
+```bash
+[ec2-user@ip-172-31-52-82 ~]$ wc --version
+wc (GNU coreutils) 8.32
+Copyright (C) 2020 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+Written by Paul Rubin and David MacKenzie.
+```

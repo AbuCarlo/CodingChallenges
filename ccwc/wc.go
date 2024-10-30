@@ -23,6 +23,15 @@ type WcResult struct {
 	err     error
 }
 
+type WcConfig struct {
+	none    bool
+	bites   bool
+	chars   bool
+	words   bool
+	lines   bool
+	longest bool
+}
+
 func readSingleFileInternal(f string) WcResult {
 	var result WcResult
 	result.f = f
@@ -41,27 +50,47 @@ func readSingleFileInternal(f string) WcResult {
 		r = bufio.NewReaderSize(inputFile, 65536)
 	}
 
-	for {
-		s, err := r.ReadString('\n')
-		if err != nil && err != io.EOF {
-			result.err = err
-		}
-		if err == io.EOF {
-			break
-		}
-
-		result.words += countWords(s)
-		result.bites += int64(r.Buffered())
-		result.chars += int64(len(s))
-		result.lines += 1
-		result.longest = max(len(s), result.longest)
-	}
+	result = readSingleReader(r)
+	result.f = f
 
 	if err := inputFile.Close(); err != nil {
 		// TODO: Do we care?
 		result.err = err
 	}
 
+	return result
+}
+
+func readSingleReader(r *bufio.Reader) WcResult {
+	result := WcResult{}
+	for {
+		// The delimiter is included in the return value. This allows us
+		// to emulate wc's behavior, which is to count a line only if it
+		// end with the delimiter, and not if it ends with EOF.
+		s, err := r.ReadString('\n')
+		if err != nil && err != io.EOF {
+			result.err = err
+		}
+
+		if len(s) > 0 {
+			result.words += countWords(s)
+			// TODO: This did not work for a string reader!
+			result.bites += int64(r.Buffered())
+			result.chars += int64(len(s))
+			result.longest = max(len(s), result.longest)
+			if s[len(s) - 1] == '\n' {
+				result.lines += 1
+
+			}
+		}
+
+		// Once we've reached EOF, we can't unread a rune to find out
+		// if it was \n. We'll have to improve our implementation, 
+		// and forgo the convenience of the buffered reader.
+		if err == io.EOF {
+			break
+		}
+	}
 	return result
 }
 
@@ -83,12 +112,12 @@ func countWords(s string) int {
 			wasWhitespace = true
 		}
 	}
+	// We've already counted the last word on this line.
 	return words
 }
 
 func readSingleFile(f string, c chan<- WcResult) {
 	c <- readSingleFileInternal(f)
-	// The *sender* must close a channel.
 	close(c)
 }
 
@@ -124,25 +153,26 @@ func printSingleFiles(results []WcResult, w io.Writer) {
 	// According to https://man7.org/linux/man-pages/man1/wc.1p.html
 	// "When any option is specified, wc shall report only the
 	// information requested by the specified options."
-	var totalBytes, totalChars, totalLines int64
+	var totalWords, totalBytes, totalChars, totalLines int64
 	// The minimum width for a number is 7 if we're going to print totals.
 	// See https://github.com/coreutils/coreutils/blob/0c9d372c96f2c7ce8c259c5563a48d1816fe611d/src/wc.c#L702
 	for _, result := range results {
 		totalBytes += result.bites
 		totalChars += result.chars
 		totalLines += int64(result.lines)
+		totalWords += int64(result.words)
 	}
 
-	maxByteLength := adjustPrintWidth(countDecimalChars(totalBytes))
-	maxCharLength := adjustPrintWidth(countDecimalChars(totalChars))
 	maxLinesLength := adjustPrintWidth(countDecimalChars(totalLines))
+	maxCharLength := adjustPrintWidth(countDecimalChars(totalChars))
+	maxByteLength := adjustPrintWidth(countDecimalChars(totalBytes))
+	maxWordsLength := adjustPrintWidth(countDecimalChars(totalWords))
 	// There will be more bytes than anything else.
 	for _, result := range results {
-		fmt.Fprintf(w, "%*d %*d %*d %s\n", maxLinesLength, result.lines, maxCharLength, result.chars, maxByteLength, result.bites, result.f)
+		fmt.Fprintf(w, "%*d %*d %*d %*d %s\n", maxLinesLength, result.lines, maxWordsLength, result.words, maxCharLength, result.chars, maxByteLength, result.bites, result.f)
 	}
 
 	/*
-
 			   By default, the standard output shall contain an entry for each
 		       input file of the form:
 
@@ -152,25 +182,29 @@ func printSingleFiles(results []WcResult, w io.Writer) {
 		       replace the <bytes> field in this format.
 	*/
 
-	fmt.Fprintf(w, "%*d %*d %*d total\n", maxLinesLength, totalLines, maxCharLength, totalChars, maxByteLength, totalBytes)
+	fmt.Fprintf(w, "%*d %*d %*d %*d total\n", maxLinesLength, totalLines, maxWordsLength, totalWords, maxCharLength, totalChars, maxByteLength, totalBytes)
 }
 
 //go:embed wc-help.md
 var usage string
 
 func main() {
-	// wc prints only byte counts by default.
-	help := flag.Bool("h", false, "display this help and exit")
-	characters := flag.Bool("c", false, "print the character counts")
-	// bites := flag.Bool("b", true, "print the byte counts")
-	// newlines := flag.Bool("l", true, "print the newline counts")
-	// maximumWidths = flag.Bool("L", false, "print the maximum display width")
+	// wc does support --help.
+	help := flag.Bool("help", false, "display this help and exit")
+	config := WcConfig{}
+	// TODO: Use a different command-line parser (https://stackoverflow.com/a/64613843/476942).
+	flag.BoolVar(&config.chars, "m", false, "print the character counts")
+	flag.BoolVar(&config.bites, "c", true, "print the byte counts")
+	flag.BoolVar(&config.lines, "l", true, "print the newline counts")
+	flag.BoolVar(&config.longest, "L", false, "print the maximum display width")
+	version := flag.Bool("version", false, "output version information and exit")
 
 	flag.Usage = func() {
 		fmt.Fprint(os.Stderr, usage)
 		os.Exit(1)
 	}
 
+	// The usage function will be invoked on a parse error.
 	flag.Parse()
 
 	if *help {
@@ -179,15 +213,13 @@ func main() {
 		os.Exit(0)
 	}
 
+	if *version {
+		flag.CommandLine.Output().Write([]byte("Version 0.0.1"))
+		os.Exit(0)
+	}
+
 	// On controlling the usage output better:
 	// https://stackoverflow.com/a/23726033/476942
-
-	if !*characters {
-		fmt.Fprintln(os.Stderr, "Only the -c option is accepted.")
-		// wc returns 1 for invalid options. It also returns 1
-		// for missing files.
-		os.Exit(1)
-	}
 
 	var channels []chan WcResult
 	if len(flag.Args()) == 0 {

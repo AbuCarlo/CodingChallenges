@@ -1,5 +1,3 @@
-```bash
-[ec2-user@ip-172-31-52-82 ~]$ wc --help 
 Usage: wc [OPTION]... [FILE]...
   or:  wc [OPTION]... --files0-from=F
 Print newline, word, and byte counts for each FILE, and a total line if
