@@ -8,8 +8,8 @@ import (
 )
 
 func TestWordCount(t *testing.T) {
-	tests := []struct{
-		word string
+	tests := []struct {
+		word     string
 		expected int
 	}{
 		{"", 0},
@@ -24,17 +24,17 @@ func TestWordCount(t *testing.T) {
 	}
 	for i, testCase := range tests {
 		t.Run(fmt.Sprintf("Test %d", i), func(t *testing.T) {
-            actual := countWords(testCase.word)
-            if actual != testCase.expected {
-                t.Errorf("Test Case %d expected %d; got %d", i, testCase.expected, actual)
-            }
-        })
+			actual := countWords(testCase.word)
+			if actual != testCase.expected {
+				t.Errorf("Test Case %d expected %d; got %d", i, testCase.expected, actual)
+			}
+		})
 	}
 }
 
 func TestLineCounts(t *testing.T) {
-	testCases := []struct{
-		input string
+	testCases := []struct {
+		input    string
 		expected int
 	}{
 		{"Hello", 0},
@@ -44,10 +44,10 @@ func TestLineCounts(t *testing.T) {
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("Test %d", i), func(t *testing.T) {
 			reader := bufio.NewReader(strings.NewReader(testCase.input))
-            result := readSingleReader(reader)
-            if result.lines != testCase.expected {
-                t.Errorf("Test Case %d expected %d; got %d", i, testCase.expected, result.lines)
-            }
-        })
+			result := readSingleReader(reader)
+			if result.Lines != testCase.expected {
+				t.Errorf("Test Case %d expected %d; got %d", i, testCase.expected, result.Lines)
+			}
+		})
 	}
 }
