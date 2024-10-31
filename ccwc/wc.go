@@ -11,6 +11,8 @@ import (
 	"golang.org/x/exp/constraints"
 
 	_ "embed"
+
+	"github.com/jessevdk/go-flags"
 )
 
 type WcResult struct {
@@ -23,13 +25,14 @@ type WcResult struct {
 	err     error
 }
 
-type WcConfig struct {
-	none    bool
-	bites   bool
-	chars   bool
-	words   bool
-	lines   bool
-	longest bool
+type Options struct {
+	Help bool `long:"help" description:"display this help and exit"`
+	Chars bool `short:"m" long:"chars" description:"print the character counts"`
+	Bytes bool `short:"c" long:"bytes" description:"print the byte counts"`
+	Lines bool `short:"l" long:"lines" description:"print the newline counts"`
+	Width bool `short:"L" long:"max-line-length" description:"print the maximum display width"`
+	Words bool `short:"w" long:"words" description:"print the word count"`
+	Version bool `long:"version" description:"output version information and exit"`
 }
 
 func readSingleFileInternal(f string) WcResult {
@@ -121,7 +124,7 @@ func readSingleFile(f string, c chan<- WcResult) {
 	close(c)
 }
 
-func printSingleFile(w io.Writer, result WcResult) {
+func printSingleFile(options Options, w io.Writer, result WcResult) {
 	fmt.Fprintf(w, "%6d bytes, %6d chars, %6d lines in %s\n", result.bites, result.chars, result.lines, result.f)
 }
 
@@ -145,9 +148,9 @@ func adjustPrintWidth(w int) int {
 	return w + 1
 }
 
-func printSingleFiles(results []WcResult, w io.Writer) {
+func printSingleFiles(options Options, results []WcResult, w io.Writer) {
 	if len(results) == 1 {
-		printSingleFile(os.Stdout, results[0])
+		printSingleFile(options, os.Stdout, results[0])
 		return
 	}
 	// According to https://man7.org/linux/man-pages/man1/wc.1p.html
@@ -189,37 +192,24 @@ func printSingleFiles(results []WcResult, w io.Writer) {
 var usage string
 
 func main() {
-	// wc does support --help.
-	help := flag.Bool("help", false, "display this help and exit")
-	config := WcConfig{}
-	// TODO: Use a different command-line parser (https://stackoverflow.com/a/64613843/476942).
-	flag.BoolVar(&config.chars, "m", false, "print the character counts")
-	flag.BoolVar(&config.bites, "c", true, "print the byte counts")
-	flag.BoolVar(&config.lines, "l", true, "print the newline counts")
-	flag.BoolVar(&config.longest, "L", false, "print the maximum display width")
-	version := flag.Bool("version", false, "output version information and exit")
+	var options Options
+	files, err := flags.Parse(&options)
 
-	flag.Usage = func() {
+	if err != nil {
 		fmt.Fprint(os.Stderr, usage)
 		os.Exit(1)
 	}
 
-	// The usage function will be invoked on a parse error.
-	flag.Parse()
-
-	if *help {
+	if options.Help {
 		// TODO: Explain the discrepancy from POSIX.
 		flag.CommandLine.Output().Write([]byte(usage))
 		os.Exit(0)
 	}
 
-	if *version {
+	if options.Version {
 		flag.CommandLine.Output().Write([]byte("Version 0.0.1"))
 		os.Exit(0)
 	}
-
-	// On controlling the usage output better:
-	// https://stackoverflow.com/a/23726033/476942
 
 	var channels []chan WcResult
 	if len(flag.Args()) == 0 {
@@ -229,7 +219,7 @@ func main() {
 		go readSingleFile("-", c)
 	}
 
-	for _, f := range flag.Args() {
+	for _, f := range files {
 		c := make(chan WcResult)
 		channels = append(channels, c)
 		go readSingleFile(f, c)
@@ -240,5 +230,6 @@ func main() {
 		result := <-c
 		results = append(results, result)
 	}
-	printSingleFiles(results, os.Stdout)
+
+	printSingleFiles(options, results, os.Stdout)
 }

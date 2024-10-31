@@ -14,6 +14,7 @@ func TestWordCount(t *testing.T) {
 	}{
 		{"", 0},
 		{"               ", 0},
+		{"       a       ", 1},
 		{"Hello", 1},
 		{" Hello", 1},
 		{"Hello, world!", 2},

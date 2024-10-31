@@ -1,5 +1,9 @@
 # Requirements and Bright Ideas
 
+## Command-Line Parsing
+
+Go's `flags` package does not support 
+
 https://groups.google.com/g/golang-nuts/c/3myLL-6mA94
 
 Handle locale/encodings: https://pkg.go.dev/github.com/delthas/go-localeinfo.
