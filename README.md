@@ -3,7 +3,7 @@ John Crickett's Coding Challenge series at https://codingchallenges.substack.com
 
 ## #1, "Build your own wc!"
 
-I started work on this on 2024-10-17.
+I started work on this on 2024-10-17. See folder `./ccwc`.
 
 This is still in development. Still to do:
 
