@@ -202,13 +202,13 @@ func printSingleFiles(options WcOptions, results []WcResult, w io.Writer) {
 	}
 
 	/*
-			   By default, the standard output shall contain an entry for each
-		       input file of the form:
+		By default, the standard output shall contain an entry for each
+		input file of the form:
 
-		           "%d %d %d %s\n", <newlines>, <words>, <bytes>, <file>
+			"%d %d %d %s\n", <newlines>, <words>, <bytes>, <file>
 
-		       If the -m option is specified, the number of characters shall
-		       replace the <bytes> field in this format.
+		If the -m option is specified, the number of characters shall
+		replace the <bytes> field in this format.
 	*/
 
 	fmt.Fprintf(w, "%*d %*d %*d %*d total\n", maxLinesLength, totalLines, maxWordsLength, totalWords, maxCharLength, totalChars, maxByteLength, totalBytes)
