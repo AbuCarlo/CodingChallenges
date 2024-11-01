@@ -26,7 +26,7 @@ type WcResult struct {
 	err      error
 }
 
-type Options struct {
+type WcOptions struct {
 	Chars   bool `short:"m" long:"chars" description:"print the character counts"`
 	Bytes   bool `short:"c" long:"bytes" description:"print the byte counts"`
 	Lines   bool `short:"l" long:"lines" description:"print the newline counts"`
@@ -36,7 +36,7 @@ type Options struct {
 	Version bool `long:"version" description:"output version information and exit"`
 }
 
-func (o Options) IsDefault() bool {
+func (o WcOptions) IsDefault() bool {
 	return !o.Bytes && !o.Chars && !o.Lines && !o.Width && !o.Words
 }
 
@@ -122,7 +122,7 @@ func countWords(s string) int {
 	return words
 }
 
-func printSingleFile(options Options, w io.Writer, result WcResult) {
+func printSingleFile(options WcOptions, w io.Writer, result WcResult) {
 	if options.IsDefault() {
 		// The long-standing default for wc: "newline, word, and byte counts"
 		// TODO Check source for wc and confirm that this is the format.
@@ -174,7 +174,7 @@ func adjustPrintWidth(w int) int {
 	return w + 1
 }
 
-func printSingleFiles(options Options, results []WcResult, w io.Writer) {
+func printSingleFiles(options WcOptions, results []WcResult, w io.Writer) {
 	if len(results) == 1 {
 		printSingleFile(options, os.Stdout, results[0])
 		return
@@ -218,7 +218,7 @@ func printSingleFiles(options Options, results []WcResult, w io.Writer) {
 var usage string
 
 func main() {
-	var options Options
+	var options WcOptions
 	files, err := flags.Parse(&options)
 
 	if err != nil {
