@@ -1,11 +1,14 @@
 package main
 
+// -ldflags="-X 'main.Version=v1.0.0'"
+
 import (
 	"bufio"
 	"flag"
 	"fmt"
 	"io"
 	"os"
+	"runtime/debug"
 	"strings"
 	"unicode"
 
@@ -219,7 +222,9 @@ var usage string
 
 func main() {
 	var options WcOptions
-	files, err := flags.Parse(&options)
+	p := flags.NewParser(&options, 0)
+	p.Usage = usage
+	files, err := p.Parse()
 
 	if err != nil {
 		fmt.Fprint(os.Stderr, usage)
@@ -233,7 +238,9 @@ func main() {
 	}
 
 	if options.Version {
-		flag.CommandLine.Output().Write([]byte("Version 0.0.1"))
+		v, _ := debug.ReadBuildInfo()
+		// TODO: Go version
+		flag.CommandLine.Output().Write([]byte(v.Main.Version))
 		os.Exit(0)
 	}
 

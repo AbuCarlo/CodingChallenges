@@ -26,7 +26,15 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}",
-            "args": ["-h"]
+            "args": ["--help"]
+        },
+        {
+            "name": "Test --version",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}",
+            "args": ["--version"]
         }
     ]
 }
