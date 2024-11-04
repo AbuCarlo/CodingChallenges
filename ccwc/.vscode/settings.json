@@ -3,5 +3,10 @@
         "TODO", "FIXME", "HACK", "WARN"
     ],
     "go.buildTags": "forceposix",
-    "go.buildFlags": [ "-ldflags=\"-X 'main.Version=v0.1.12-beta.1'\"" ]
+    "go.buildFlags": [],
+    "gopls": {
+        "build.buildFlags": [
+            "-tags=forceposix"
+        ]
+    },
 }

@@ -217,30 +217,44 @@ func printSingleFiles(options WcOptions, results []WcResult, w io.Writer) {
 	fmt.Fprintf(w, "%*d %*d %*d %*d total\n", maxLinesLength, totalLines, maxWordsLength, totalWords, maxCharLength, totalChars, maxByteLength, totalBytes)
 }
 
-//go:embed wc-help.md
-var usage string
+//go:embed gnu-help.txt
+var gnuUsage string
+
+//go:embed gnu-version.txt
+var gnuVersion string
+
+// WARN Unfortunately, the Windows shell will create this as a UTF-16 file.
+
+//go:embed version.txt
+var ccVersion string
 
 func main() {
 	var options WcOptions
 	p := flags.NewParser(&options, 0)
-	p.Usage = usage
+	p.Usage = gnuUsage
 	files, err := p.Parse()
 
 	if err != nil {
-		fmt.Fprint(os.Stderr, usage)
+		fmt.Fprint(os.Stderr, gnuUsage)
 		os.Exit(1)
 	}
 
 	if options.Help {
-		// TODO Rewrite the usage for Windows.
-		flag.CommandLine.Output().Write([]byte(usage))
+		flag.CommandLine.Output().Write([]byte(gnuUsage))
 		os.Exit(0)
 	}
 
+	divider := "================================================================================\n"
+
 	if options.Version {
+		flag.CommandLine.Output().Write([]byte("This is a derivative product of the GNU wc utility,\nprovided under the same GPL license.\n"))
+		flag.CommandLine.Output().Write([]byte(divider))
 		v, _ := debug.ReadBuildInfo()
-		// TODO: Go version
-		flag.CommandLine.Output().Write([]byte(v.Main.Version))
+		flag.CommandLine.Output().Write([]byte(gnuVersion))
+		flag.CommandLine.Output().Write([]byte(divider))
+		// See warning above.
+		flag.CommandLine.Output().Write([]byte("Version by Anthony A. Nassar: " + ccVersion))
+		flag.CommandLine.Output().Write([]byte("Built with Go version: " + v.GoVersion + "\n"))
 		os.Exit(0)
 	}
 

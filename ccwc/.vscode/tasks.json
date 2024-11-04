@@ -1,0 +1,28 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"command": "git",
+			"args": ["describe", "--always", "--long", "--dirty", "--tags", ">", "version.txt"],
+			"label": "Update version.txt"
+		},
+		{
+			"type": "go",
+			"label": "Build wc Application",
+			"command": "build",
+			"args": [
+				"${fileDirname}"
+			],
+			"problemMatcher": [
+				"$go"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"detail": "cd ${workspaceFolderBasename}; go build -tags=forceposix",
+			"dependsOn": []
+		}
+	]
+}

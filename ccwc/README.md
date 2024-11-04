@@ -8,9 +8,22 @@ All functionality described here is implemented: https://man7.org/linux/man-page
 
 The source for `wc` is at https://github.com/coreutils/coreutils/blob/master/src/wc.c.
 
-I have deliberately replicated certain oddities of `wc`. However, BSD-style options with two dashes, e.g. `--byte-count`, are not supported, since they're not 
-idiomatic to Go. `-c` means bytes (or ASCII characters); `-m` means characters (at the moment
-only UTF-8 input is supported).
+### Licensing
+
+Insofar as this is a "derivative" product in every sense of the GNU implementation of `wc`, it 
+is offered under the same GNU license.
+
+### Character Encodings
+
+I have deliberately replicated certain legacy features of `wc`, especially the original equation 
+of bytes with characters. On a current Linux system, the encoding with almost certainly be UTF-8 
+(i.e. `LANG=C.UTF-8`), which is the default for Go. No provisions was made for other character
+encodings.
+
+### Versioning
+
+
+
 
 I have verified that `wc` will not read from `STDIN` if you tell it to read files, to wit:
 
