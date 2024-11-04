@@ -224,6 +224,7 @@ var gnuUsage string
 var gnuVersion string
 
 // WARN Unfortunately, the Windows shell will create this as a UTF-16 file.
+// Regenerate it thus:  git describe --always --long --dirty --tags > version.txt
 
 //go:embed version.txt
 var ccVersion string
