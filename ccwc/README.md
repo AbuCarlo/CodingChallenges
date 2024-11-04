@@ -11,13 +11,13 @@ The source for `wc` is at https://github.com/coreutils/coreutils/blob/master/src
 ### Licensing
 
 Insofar as this is a "derivative" product in every sense of the GNU implementation of `wc`, it 
-is offered under the same GNU license.
+is offered under the same GNU license. Run `wc --version` for details.
 
 ### Character Encodings
 
 I have deliberately replicated certain legacy features of `wc`, especially the original equation 
 of bytes with characters. On a current Linux system, the encoding with almost certainly be UTF-8 
-(i.e. `LANG=C.UTF-8`), which is the default for Go. No provisions was made for other character
+(i.e. `LANG=C.UTF-8`), which is the default for Go. No provision has yet been made for other character
 encodings.
 
 ### Versioning

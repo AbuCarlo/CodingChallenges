@@ -217,6 +217,9 @@ func printSingleFiles(options WcOptions, results []WcResult, w io.Writer) {
 	fmt.Fprintf(w, "%*d %*d %*d %*d total\n", maxLinesLength, totalLines, maxWordsLength, totalWords, maxCharLength, totalChars, maxByteLength, totalBytes)
 }
 
+//go:embed version-preface.txt
+var versionPreface string
+
 //go:embed gnu-help.txt
 var gnuUsage string
 
@@ -245,16 +248,16 @@ func main() {
 		os.Exit(0)
 	}
 
-	divider := "================================================================================\n"
+	divider := "================================================================================"
 
 	if options.Version {
-		flag.CommandLine.Output().Write([]byte("This is a derivative product of the GNU wc utility,\nprovided under the same GPL license.\n"))
-		flag.CommandLine.Output().Write([]byte(divider))
+		flag.CommandLine.Output().Write([]byte(versionPreface))
+		flag.CommandLine.Output().Write([]byte(divider + "\n"))
 		v, _ := debug.ReadBuildInfo()
 		flag.CommandLine.Output().Write([]byte(gnuVersion))
-		flag.CommandLine.Output().Write([]byte(divider))
+		flag.CommandLine.Output().Write([]byte(divider + "\n"))
 		// See warning above.
-		flag.CommandLine.Output().Write([]byte("Version by Anthony A. Nassar: " + ccVersion))
+		flag.CommandLine.Output().Write([]byte("Golang version by Anthony A. Nassar: " + ccVersion))
 		flag.CommandLine.Output().Write([]byte("Built with Go version: " + v.GoVersion + "\n"))
 		os.Exit(0)
 	}
