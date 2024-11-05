@@ -177,7 +177,7 @@ func adjustPrintWidth(w int) int {
 	return w + 1
 }
 
-func printSingleFiles(options WcOptions, results []WcResult, w io.Writer) {
+func printMultipleFiles(options WcOptions, results []WcResult, w io.Writer) {
 	if len(results) == 1 {
 		printSingleFile(options, os.Stdout, results[0])
 		return
@@ -186,6 +186,7 @@ func printSingleFiles(options WcOptions, results []WcResult, w io.Writer) {
 	// "When any option is specified, wc shall report only the
 	// information requested by the specified options."
 	var totalWords, totalBytes, totalChars, totalLines int64
+	var longestLine int
 	// The minimum width for a number is 7 if we're going to print totals.
 	// See https://github.com/coreutils/coreutils/blob/0c9d372c96f2c7ce8c259c5563a48d1816fe611d/src/wc.c#L702
 	for _, result := range results {
@@ -193,15 +194,73 @@ func printSingleFiles(options WcOptions, results []WcResult, w io.Writer) {
 		totalChars += result.Chars
 		totalLines += int64(result.Lines)
 		totalWords += int64(result.Words)
+		longestLine = max(longestLine, result.Width)
 	}
 
 	maxLinesLength := adjustPrintWidth(countDecimalChars(totalLines))
 	maxCharLength := adjustPrintWidth(countDecimalChars(totalChars))
 	maxByteLength := adjustPrintWidth(countDecimalChars(totalBytes))
 	maxWordsLength := adjustPrintWidth(countDecimalChars(totalWords))
+	maxWidthLength := adjustPrintWidth(countDecimalChars(longestLine))
+
 	// There will be more bytes than anything else.
 	for _, result := range results {
-		fmt.Fprintf(w, "%*d %*d %*d %*d %s\n", maxLinesLength, result.Lines, maxWordsLength, result.Words, maxCharLength, result.Chars, maxByteLength, result.Bytes, result.FileName)
+
+		if options.IsDefault() {
+			// The long-standing default for wc: "newline, word, and byte counts"
+			fmt.Fprintf(w, "%*d %*d %*d", maxLinesLength, result.Lines, maxWordsLength, result.Words, maxByteLength, result.Bytes)
+			if result.FileName == "-" { 
+				fmt.Fprintln(w)
+			} else {
+				fmt.Fprintln(w, " ", result.FileName)
+			}
+		} else {
+			{
+				var data []string
+				// From the wc help: "newline, word, character, byte, maximum line length"
+				if options.Lines {
+					data = append(data, fmt.Sprintf("%*d", maxLinesLength, result.Lines))
+				}
+				if options.Words {
+					data = append(data, fmt.Sprintf("%*d", maxWordsLength, result.Words))
+				}
+				if options.Chars {
+					data = append(data, fmt.Sprintf("%*d", maxCharLength, result.Chars))
+				}
+				if options.Bytes {
+					data = append(data, fmt.Sprintf("%*d", maxByteLength, result.Bytes))
+				}
+				if options.Width {
+					data = append(data, fmt.Sprintf("%*d", maxWidthLength, result.Width))
+				}
+				fmt.Fprintln(w, strings.Join(data, " "))
+			}
+		}
+	}
+
+	// Print totals.
+
+	if options.IsDefault() {
+		fmt.Fprintf(w, "%*d %*d %*d total\n", maxLinesLength, totalLines, maxWordsLength, totalWords, maxByteLength, totalBytes)
+	} else {
+		var data []string
+		if options.Lines {
+			data = append(data, fmt.Sprintf("%*d", maxLinesLength, totalLines))
+		}
+		if options.Words {
+			data = append(data, fmt.Sprintf("%*d", maxWordsLength, totalWords))
+		}
+		if options.Chars {
+			data = append(data, fmt.Sprintf("%*d", maxCharLength, totalChars))
+		}
+		if options.Bytes {
+			data = append(data, fmt.Sprintf("%*d", maxByteLength, totalBytes))
+		}
+		if options.Width {
+			data = append(data, fmt.Sprintf("%*d", maxWidthLength, longestLine))
+		}
+		fmt.Fprint(w, strings.Join(data, " "))
+		fmt.Fprintln(w, " total")
 	}
 
 	/*
@@ -213,8 +272,6 @@ func printSingleFiles(options WcOptions, results []WcResult, w io.Writer) {
 		If the -m option is specified, the number of characters shall
 		replace the <bytes> field in this format.
 	*/
-
-	fmt.Fprintf(w, "%*d %*d %*d %*d total\n", maxLinesLength, totalLines, maxWordsLength, totalWords, maxCharLength, totalChars, maxByteLength, totalBytes)
 }
 
 //go:embed version-preface.txt
@@ -239,26 +296,21 @@ func main() {
 	files, err := p.Parse()
 
 	if err != nil {
+		// TODO: What does wc do?
 		fmt.Fprint(os.Stderr, gnuUsage)
 		os.Exit(1)
 	}
 
 	if options.Help {
+		// TODO What does wc do?
 		flag.CommandLine.Output().Write([]byte(gnuUsage))
 		os.Exit(0)
 	}
 
-	divider := "================================================================================"
-
 	if options.Version {
-		flag.CommandLine.Output().Write([]byte(versionPreface))
-		flag.CommandLine.Output().Write([]byte(divider + "\n"))
-		v, _ := debug.ReadBuildInfo()
-		flag.CommandLine.Output().Write([]byte(gnuVersion))
-		flag.CommandLine.Output().Write([]byte(divider + "\n"))
 		// See warning above.
-		flag.CommandLine.Output().Write([]byte("Golang version by Anthony A. Nassar: " + ccVersion))
-		flag.CommandLine.Output().Write([]byte("Built with Go version: " + v.GoVersion + "\n"))
+		// TODO What does wc do?
+		printVersion()
 		os.Exit(0)
 	}
 
@@ -285,5 +337,18 @@ func main() {
 		results = append(results, result)
 	}
 
-	printSingleFiles(options, results, os.Stdout)
+	printMultipleFiles(options, results, os.Stdout)
+}
+
+func printVersion() {
+	divider := "================================================================================"
+
+	flag.CommandLine.Output().Write([]byte(versionPreface))
+	flag.CommandLine.Output().Write([]byte(divider + "\n"))
+	v, _ := debug.ReadBuildInfo()
+	flag.CommandLine.Output().Write([]byte(gnuVersion))
+	flag.CommandLine.Output().Write([]byte(divider + "\n"))
+
+	flag.CommandLine.Output().Write([]byte("Golang version by Anthony A. Nassar: " + ccVersion))
+	flag.CommandLine.Output().Write([]byte("Built with Go version: " + v.GoVersion + "\n"))
 }
