@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"anthonyabunassar.com/cc/wc/input"
+	"anthonyabunassar.com/coding-challenges/ccwc/input"
 )
 
 func TestWordCount(t *testing.T) {

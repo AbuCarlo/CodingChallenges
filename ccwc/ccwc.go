@@ -15,7 +15,7 @@ import (
 
 	"github.com/jessevdk/go-flags"
 
-	"anthonyabunassar.com/cc/wc/input"
+	"anthonyabunassar.com/coding-challenges/ccwc/input"
 )
 
 type WcOptions struct {

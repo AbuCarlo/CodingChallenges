@@ -1,4 +1,4 @@
-module anthonyabunassar.com/cc/wc
+module anthonyabunassar.com/coding-challenges/ccwc
 
 go 1.22.1
 
