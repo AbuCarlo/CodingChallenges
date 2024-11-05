@@ -1,0 +1,11 @@
+# 2024/11/05 12:31:46.629517 [TestConsoleOutput] [rapid] draw o: []string{}
+# 2024/11/05 12:31:46.666623 [TestConsoleOutput] [./test-files/hello.txt] failed.
+# Expected:
+# 1 1 7 ./test-files/hello.txt
+# 
+# Got:
+#      1      1      7  ./test-files/hello.txt
+# 
+# 
+v0.4.8#11296073212117859322
+0x0

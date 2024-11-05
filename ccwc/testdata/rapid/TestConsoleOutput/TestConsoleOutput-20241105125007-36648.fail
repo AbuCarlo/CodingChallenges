@@ -1,0 +1,13 @@
+# 2024/11/05 12:50:07.333434 [TestConsoleOutput] [rapid] draw tx: []string{}
+# 2024/11/05 12:50:07.333434 [TestConsoleOutput] [rapid] draw o: []string{}
+# 2024/11/05 12:50:07.373694 [TestConsoleOutput] [./test-files/hello.txt] failed.
+# Expected:
+# 1 1 7 ./test-files/hello.txt
+# 
+# Got:
+#      1      1      7  ./test-files/hello.txt
+# 
+# 
+v0.4.8#3093801137004120404
+0x0
+0x0
