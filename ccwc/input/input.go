@@ -17,6 +17,20 @@ type WcResult struct {
 	err      error
 }
 
+/*
+	From the documentation:
+
+	"Unless the environment variable POSIXLY_CORRECT is set, GNU wc treats the following Unicode characters
+	as white space even if the current locale does not: U+00A0 NO-BREAK SPACE, U+2007 FIGURE SPACE, 
+	U+202F NARROW NO-BREAK SPACE, and U+2060 WORD JOINER."
+*/
+
+var posixlyCorrect bool
+
+func init() {
+	_, posixlyCorrect = os.LookupEnv("POSIXLY_CORRECT")
+}
+
 func CountWords(s string) int {
 	/*
 		From the man page: "A word is a non-zero-length sequence of characters delimited by white space.
@@ -42,7 +56,7 @@ func CountWords(s string) int {
 func ReadSingleReader(r *bufio.Reader) WcResult {
 	result := WcResult{}
 	// The file begins on a "word boundary.""
-	wasWhitespace := true
+	precedingWhitespace := true
 	currentWidth := 0
 
 	for {
@@ -61,19 +75,33 @@ func ReadSingleReader(r *bufio.Reader) WcResult {
 		}
 		currentWidth += 1
 		result.Bytes += int64(size)
-		result.Chars += 1
+		/* 
+			GNU wc does not count encoding errors as characters.
+
+			See also the documentation for bufio.Reader.ReadRune().
+		*/
+		if r != '\ufffd' {
+			result.Chars += 1
+		}
+		
 		if r == '\n' {
+			/* 
+				GNU wc counts \n characters. A file with no \n will have 0 "lines," per the documentation.
+			*/
 			result.Width = max(result.Width, currentWidth)
 			currentWidth = 0
 			result.Lines += 1
 		}
-		if !unicode.IsSpace(r) {
-			if wasWhitespace {
+		/*
+			See the initialization of posixlyCorrect, above.
+		*/
+		if unicode.IsSpace(r) || posixlyCorrect && (r == '\u2007' || r == '\u202f' || r == '\u2060') {
+			precedingWhitespace = true
+		} else {
+			if precedingWhitespace {
 				result.Words += 1
 			}
-			wasWhitespace = false
-		} else {
-			wasWhitespace = true
+			precedingWhitespace = false
 		}
 	}
 	return result

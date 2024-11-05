@@ -19,13 +19,14 @@ import (
 )
 
 type WcOptions struct {
-	Chars   bool `short:"m" long:"chars" description:"print the character counts"`
-	Bytes   bool `short:"c" long:"bytes" description:"print the byte counts"`
-	Lines   bool `short:"l" long:"lines" description:"print the newline counts"`
-	Width   bool `short:"L" long:"max-line-length" description:"print the maximum display width"`
-	Words   bool `short:"w" long:"words" description:"print the word count"`
-	Help    bool `long:"help" description:"display this help and exit"`
-	Version bool `long:"version" description:"output version information and exit"`
+	Chars   bool   `short:"m" long:"chars" description:"print the character counts"`
+	Bytes   bool   `short:"c" long:"bytes" description:"print the byte counts"`
+	Lines   bool   `short:"l" long:"lines" description:"print the newline counts"`
+	Width   bool   `short:"L" long:"max-line-length" description:"print the maximum display width"`
+	Words   bool   `short:"w" long:"words" description:"print the word count"`
+	Totals  string `long:"totals" choice:"auto" choice:"always" choice:"only" choice:"never" default:"auto"`
+	Help    bool   `long:"help" description:"display this help and exit"`
+	Version bool   `long:"version" description:"output version information and exit"`
 }
 
 func (o WcOptions) IsDefault() bool {
@@ -33,6 +34,7 @@ func (o WcOptions) IsDefault() bool {
 }
 
 func printSingleFile(options WcOptions, w io.Writer, result input.WcResult) {
+	// TODO Handle --totals==always and --totals==only
 	if options.IsDefault() {
 		// The long-standing default for wc: "newline, word, and byte counts"
 		fmt.Fprintf(w, "%6d %6d %6d", result.Lines, result.Words, result.Bytes)
@@ -110,42 +112,47 @@ func printMultipleFiles(options WcOptions, results []input.WcResult, w io.Writer
 	maxWordsLength := adjustPrintWidth(countDecimalChars(totalWords))
 	maxWidthLength := adjustPrintWidth(countDecimalChars(longestLine))
 
-	// There will be more bytes than anything else.
-	for _, result := range results {
+	if options.Totals != "never" {
+		for _, result := range results {
 
-		if options.IsDefault() {
-			// The long-standing default for wc: "newline, word, and byte counts"
-			fmt.Fprintf(w, "%*d %*d %*d", maxLinesLength, result.Lines, maxWordsLength, result.Words, maxByteLength, result.Bytes)
-			if result.FileName == "-" {
-				fmt.Fprintln(w)
+			if options.IsDefault() {
+				// The long-standing default for wc: "newline, word, and byte counts"
+				fmt.Fprintf(w, "%*d %*d %*d", maxLinesLength, result.Lines, maxWordsLength, result.Words, maxByteLength, result.Bytes)
+				if result.FileName == "-" {
+					fmt.Fprintln(w)
+				} else {
+					fmt.Fprintln(w, " ", result.FileName)
+				}
 			} else {
-				fmt.Fprintln(w, " ", result.FileName)
-			}
-		} else {
-			{
-				var data []string
-				// From the wc help: "newline, word, character, byte, maximum line length"
-				if options.Lines {
-					data = append(data, fmt.Sprintf("%*d", maxLinesLength, result.Lines))
+				{
+					var data []string
+					// From the wc help: "newline, word, character, byte, maximum line length"
+					if options.Lines {
+						data = append(data, fmt.Sprintf("%*d", maxLinesLength, result.Lines))
+					}
+					if options.Words {
+						data = append(data, fmt.Sprintf("%*d", maxWordsLength, result.Words))
+					}
+					if options.Chars {
+						data = append(data, fmt.Sprintf("%*d", maxCharLength, result.Chars))
+					}
+					if options.Bytes {
+						data = append(data, fmt.Sprintf("%*d", maxByteLength, result.Bytes))
+					}
+					if options.Width {
+						data = append(data, fmt.Sprintf("%*d", maxWidthLength, result.Width))
+					}
+					fmt.Fprintln(w, strings.Join(data, " "))
 				}
-				if options.Words {
-					data = append(data, fmt.Sprintf("%*d", maxWordsLength, result.Words))
-				}
-				if options.Chars {
-					data = append(data, fmt.Sprintf("%*d", maxCharLength, result.Chars))
-				}
-				if options.Bytes {
-					data = append(data, fmt.Sprintf("%*d", maxByteLength, result.Bytes))
-				}
-				if options.Width {
-					data = append(data, fmt.Sprintf("%*d", maxWidthLength, result.Width))
-				}
-				fmt.Fprintln(w, strings.Join(data, " "))
 			}
 		}
 	}
 
 	// Print totals.
+
+	if options.Totals == "never" {
+		return
+	}
 
 	if options.IsDefault() {
 		fmt.Fprintf(w, "%*d %*d %*d total\n", maxLinesLength, totalLines, maxWordsLength, totalWords, maxByteLength, totalBytes)
@@ -166,19 +173,14 @@ func printMultipleFiles(options WcOptions, results []input.WcResult, w io.Writer
 		if options.Width {
 			data = append(data, fmt.Sprintf("%*d", maxWidthLength, longestLine))
 		}
+
 		fmt.Fprint(w, strings.Join(data, " "))
-		fmt.Fprintln(w, " total")
+		if options.Totals == "only" {
+			fmt.Fprintln(w)
+		} else {
+			fmt.Fprintln(w, " total")
+		}
 	}
-
-	/*
-		By default, the standard output shall contain an entry for each
-		input file of the form:
-
-			"%d %d %d %s\n", <newlines>, <words>, <bytes>, <file>
-
-		If the -m option is specified, the number of characters shall
-		replace the <bytes> field in this format.
-	*/
 }
 
 //go:embed version-preface.txt
@@ -203,7 +205,6 @@ func main() {
 	files, err := p.Parse()
 
 	if err != nil {
-		// TODO: What does wc do?
 		fmt.Fprint(os.Stderr, gnuUsage)
 		os.Exit(1)
 	}
@@ -216,8 +217,6 @@ func main() {
 	}
 
 	if options.Version {
-		// See warning above.
-		// TODO What does wc do?
 		printVersion()
 		os.Exit(0)
 	}

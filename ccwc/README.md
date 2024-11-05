@@ -4,7 +4,7 @@ The problem is specified here: https://codingchallenges.substack.com/p/coding-ch
 
 ## Scope
 
-All functionality described here is implemented: https://man7.org/linux/man-pages/man1/wc.1.html
+All functionality described here is implemented: https://www.gnu.org/software/coreutils/manual/html_node/wc-invocation.html#wc-invocation, as of 2024-11-05. 
 
 The source for `wc` is at https://github.com/coreutils/coreutils/blob/master/src/wc.c.
 
