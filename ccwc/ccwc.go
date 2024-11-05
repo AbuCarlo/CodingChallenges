@@ -33,7 +33,11 @@ func (o WcOptions) IsDefault() bool {
 	return !o.Bytes && !o.Chars && !o.Lines && !o.Width && !o.Words
 }
 
-func printSingleFile(options WcOptions, w io.Writer, result input.WcResult) {
+func reportSingleFile(options WcOptions, w io.Writer, result input.WcResult) {
+	if result.Error != nil {
+		fmt.Fprintf(os.Stderr, "ccwc: %s: %e\n", result.FileName, result.Error)
+		// TODO Print totals nonetheless?
+	}
 	// TODO Handle --totals==always and --totals==only
 	if options.IsDefault() {
 		// The long-standing default for wc: "newline, word, and byte counts"
@@ -78,7 +82,7 @@ func countDecimalChars[I constraints.Integer](in I) int {
 	return count
 }
 
-func adjustPrintWidth(w int) int {
+func adjustIntegerOutputWidth(w int) int {
 	if w < 6 {
 		// This is the default in wc.
 		return 7
@@ -86,9 +90,9 @@ func adjustPrintWidth(w int) int {
 	return w + 1
 }
 
-func printMultipleFiles(options WcOptions, results []input.WcResult, w io.Writer) {
+func reportMultipleFiles(options WcOptions, results []input.WcResult, w io.Writer) {
 	if len(results) == 1 {
-		printSingleFile(options, os.Stdout, results[0])
+		reportSingleFile(options, os.Stdout, results[0])
 		return
 	}
 	// According to https://man7.org/linux/man-pages/man1/wc.1p.html
@@ -106,13 +110,13 @@ func printMultipleFiles(options WcOptions, results []input.WcResult, w io.Writer
 		longestLine = max(longestLine, result.Width)
 	}
 
-	maxLinesLength := adjustPrintWidth(countDecimalChars(totalLines))
-	maxCharLength := adjustPrintWidth(countDecimalChars(totalChars))
-	maxByteLength := adjustPrintWidth(countDecimalChars(totalBytes))
-	maxWordsLength := adjustPrintWidth(countDecimalChars(totalWords))
-	maxWidthLength := adjustPrintWidth(countDecimalChars(longestLine))
+	maxLinesLength := adjustIntegerOutputWidth(countDecimalChars(totalLines))
+	maxCharLength := adjustIntegerOutputWidth(countDecimalChars(totalChars))
+	maxByteLength := adjustIntegerOutputWidth(countDecimalChars(totalBytes))
+	maxWordsLength := adjustIntegerOutputWidth(countDecimalChars(totalWords))
+	maxWidthLength := adjustIntegerOutputWidth(countDecimalChars(longestLine))
 
-	if options.Totals != "never" {
+	if options.Totals != "only" {
 		for _, result := range results {
 
 			if options.IsDefault() {
@@ -224,7 +228,7 @@ func main() {
 	var channels []chan input.WcResult
 	if len(files) == 0 {
 		result := input.ReadSingleFileInternal("")
-		printSingleFile(options, os.Stdout, result)
+		reportSingleFile(options, os.Stdout, result)
 		os.Exit(0)
 	}
 
@@ -244,7 +248,7 @@ func main() {
 		results = append(results, result)
 	}
 
-	printMultipleFiles(options, results, os.Stdout)
+	reportMultipleFiles(options, results, os.Stdout)
 }
 
 func printVersion() {

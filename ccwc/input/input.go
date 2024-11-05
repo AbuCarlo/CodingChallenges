@@ -14,7 +14,7 @@ type WcResult struct {
 	Words    int
 	Lines    int
 	Width    int
-	err      error
+	Error      error
 }
 
 /*
@@ -65,7 +65,7 @@ func ReadSingleReader(r *bufio.Reader) WcResult {
 		if err != nil {
 			if err != io.EOF {
 				// TODO What is our plan here?
-				result.err = err
+				result.Error = err
 			} else {
 				// wc does not count EOF as the end of a word or a line, 
 				// but it might affect the maximum line width.
@@ -112,7 +112,8 @@ func ReadSingleFileInternal(f string) WcResult {
 	result.FileName = f
 	inputFile, err := os.Open(f)
 	if err != nil {
-		result.err = err
+		// wc does not stop on an error.
+		result.Error = err
 		return result
 	}
 
@@ -122,7 +123,6 @@ func ReadSingleFileInternal(f string) WcResult {
 	} else {
 		// The default buffer size is 4K. Performance test?
 		// TODO https://www.reddit.com/r/golang/comments/i1cro6/on_choosing_a_buffer_size/
-		// TODO What it a line is longer than the buffer?
 		r = bufio.NewReaderSize(inputFile, 65536)
 	}
 
@@ -132,8 +132,9 @@ func ReadSingleFileInternal(f string) WcResult {
 	}
 
 	if err := inputFile.Close(); err != nil {
-		// TODO Do we care?
-		result.err = err
+		// At this point the error doesn't matter.
+		// Let's just output it later. 
+		result.Error = err
 	}
 
 	return result
