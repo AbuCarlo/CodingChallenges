@@ -1,0 +1,3 @@
+This is a derivative product of the GNU wc utility,
+provided under the same GPL license. The following
+is the --version output from that implementation.

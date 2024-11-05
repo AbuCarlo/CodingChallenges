@@ -3,8 +3,11 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
+
+	"anthonyabunassar.com/coding-challenges/ccwc/input"
 )
 
 func TestWordCount(t *testing.T) {
@@ -24,9 +27,10 @@ func TestWordCount(t *testing.T) {
 	}
 	for i, testCase := range tests {
 		t.Run(fmt.Sprintf("Test %d", i), func(t *testing.T) {
-			actual := countWords(testCase.word)
-			if actual != testCase.expected {
-				t.Errorf("Test Case %d expected %d; got %d", i, testCase.expected, actual)
+			reader := bufio.NewReader(strings.NewReader(testCase.word))
+			actual := input.ReadSingleReader(reader)
+			if actual.Words != testCase.expected {
+				t.Errorf("Test Case %d expected %d; got %d", i, testCase.expected, actual.Words)
 			}
 		})
 	}
@@ -44,10 +48,35 @@ func TestLineCounts(t *testing.T) {
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("Test %d", i), func(t *testing.T) {
 			reader := bufio.NewReader(strings.NewReader(testCase.input))
-			result := readSingleReader(reader)
+			result := input.ReadSingleReader(reader)
 			if result.Lines != testCase.expected {
 				t.Errorf("Test Case %d expected %d; got %d", i, testCase.expected, result.Lines)
 			}
 		})
+	}
+}
+
+func TestLongLine(t *testing.T) {
+	f, err := os.CreateTemp("", "*.txt");
+	if err != nil {
+		t.Fatal(err)
+	}
+	w := bufio.NewWriter(f)
+	size := 1000000
+	for range size {
+		w.WriteString("*")
+	}
+	if err := w.Flush(); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	// I've verified that this is how wc counts a long file with no spaces and no \n.
+	expected := input.WcResult{FileName: f.Name(), Bytes: int64(size), Words: 1, Lines: 0, Chars: int64(size), Width: size}
+	actual := input.ReadSingleFileInternal(f.Name())
+	if actual != expected {
+		t.Errorf("Got %+v from generated file of %d characters.", actual, size)
 	}
 }

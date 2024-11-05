@@ -4,20 +4,20 @@ The problem is specified here: https://codingchallenges.substack.com/p/coding-ch
 
 ## Scope
 
-All functionality described here is implemented: https://man7.org/linux/man-pages/man1/wc.1.html
+All functionality described here is implemented: https://www.gnu.org/software/coreutils/manual/html_node/wc-invocation.html#wc-invocation, as of 2024-11-05. 
 
 The source for `wc` is at https://github.com/coreutils/coreutils/blob/master/src/wc.c.
 
 ### Licensing
 
 Insofar as this is a "derivative" product in every sense of the GNU implementation of `wc`, it 
-is offered under the same GNU license.
+is offered under the same GNU license. Run `wc --version` for details.
 
 ### Character Encodings
 
 I have deliberately replicated certain legacy features of `wc`, especially the original equation 
 of bytes with characters. On a current Linux system, the encoding with almost certainly be UTF-8 
-(i.e. `LANG=C.UTF-8`), which is the default for Go. No provisions was made for other character
+(i.e. `LANG=C.UTF-8`), which is the default for Go. No provision has yet been made for other character
 encodings.
 
 ### Versioning
@@ -162,15 +162,21 @@ echo Hello | wc 'Art of War - English - UTF-8.txt' -
    7144   58165  342166 total
 ```
 
-Version information:
+This is correct:
 
 ```bash
-[ec2-user@ip-172-31-52-82 ~]$ wc --version
-wc (GNU coreutils) 8.32
-Copyright (C) 2020 Free Software Foundation, Inc.
-License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.
-This is free software: you are free to change and redistribute it.
-There is NO WARRANTY, to the extent permitted by law.
-
-Written by Paul Rubin and David MacKenzie.
+[ec2-user@ip-172-31-52-82 ~]$ wc -c -m -w -L long-file.txt 
+      1 1000000 1000000 1000000 long-file.txt
+[ec2-user@ip-172-31-52-82 ~]$ wc -c -m -w -L -l long-file.txt 
+      0       1 1000000 1000000 1000000 long-file.txt
+[ec2-user@ip-172-31-52-82 ~]$ wc -c long-file.txt 
+1000000 long-file.txt
+[ec2-user@ip-172-31-52-82 ~]$ wc -m long-file.txt 
+1000000 long-file.txt
+[ec2-user@ip-172-31-52-82 ~]$ wc -l long-file.txt 
+0 long-file.txt
+[ec2-user@ip-172-31-52-82 ~]$ wc -L long-file.txt 
+1000000 long-file.txt
+[ec2-user@ip-172-31-52-82 ~]$ wc long-file.txt 
+      0       1 1000000 long-file.txt
 ```
