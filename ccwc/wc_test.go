@@ -21,18 +21,8 @@ var validArguments = []string{
 	"-c", "-m", "-l", "-L", "-w",
 }
 
-var validTotalArgValues = []string{
-	"always", "auto", "only", "never",
-}
-
 func generateValidArgs(t *rapid.T) []string {
-	totalsGenerator := rapid.Custom(func(t *rapid.T) string {
-		totalValue := rapid.SliceOfN(rapid.SampledFrom(validTotalArgValues), 1, 1).Draw(t, "tv")
-		return "--total=" + totalValue[0]
-	})
-	totalArg := rapid.SliceOfN(totalsGenerator, 0, 1).Draw(t, "t")
 	args := rapid.SliceOfDistinct(rapid.SampledFrom(validArguments), func(s string) string { return s }).Draw(t, "o")
-	args = append(args, totalArg...)
 	return args
 }
 

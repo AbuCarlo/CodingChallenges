@@ -17,7 +17,6 @@ import (
 
 	"anthonyabunassar.com/coding-challenges/ccwc/input"
 	"anthonyabunassar.com/coding-challenges/ccwc/options"
-
 )
 
 func reportSingleFile(result input.WcResult, options options.WcOptions, w io.Writer) {
@@ -113,47 +112,41 @@ func reportMultipleFiles(results []input.WcResult, options options.WcOptions, w 
 	maxWordsLength := adjustIntegerOutputWidth(countDecimalChars(totalWords))
 	maxWidthLength := adjustIntegerOutputWidth(countDecimalChars(longestLine))
 
-	if options.Totals != "only" {
-		for _, result := range results {
+	for _, result := range results {
 
-			if options.IsDefault() {
-				// The long-standing default for wc: "newline, word, and byte counts"
-				fmt.Fprintf(w, "%*d %*d %*d", maxLinesLength, result.Lines, maxWordsLength, result.Words, maxByteLength, result.Bytes)
-				if result.FileName == "-" {
-					fmt.Fprintln(w)
-				} else {
-					fmt.Fprintln(w, " ", result.FileName)
-				}
+		if options.IsDefault() {
+			// The long-standing default for wc: "newline, word, and byte counts"
+			fmt.Fprintf(w, "%*d %*d %*d", maxLinesLength, result.Lines, maxWordsLength, result.Words, maxByteLength, result.Bytes)
+			if result.FileName == "-" {
+				fmt.Fprintln(w)
 			} else {
-				{
-					var data []string
-					// From the wc help: "newline, word, character, byte, maximum line length"
-					if options.Lines {
-						data = append(data, fmt.Sprintf("%*d", maxLinesLength, result.Lines))
-					}
-					if options.Words {
-						data = append(data, fmt.Sprintf("%*d", maxWordsLength, result.Words))
-					}
-					if options.Chars {
-						data = append(data, fmt.Sprintf("%*d", maxCharLength, result.Chars))
-					}
-					if options.Bytes {
-						data = append(data, fmt.Sprintf("%*d", maxByteLength, result.Bytes))
-					}
-					if options.Width {
-						data = append(data, fmt.Sprintf("%*d", maxWidthLength, result.Width))
-					}
-					fmt.Fprintln(w, strings.Join(data, " "))
+				fmt.Fprintln(w, " ", result.FileName)
+			}
+		} else {
+			{
+				var data []string
+				// From the wc help: "newline, word, character, byte, maximum line length"
+				if options.Lines {
+					data = append(data, fmt.Sprintf("%*d", maxLinesLength, result.Lines))
 				}
+				if options.Words {
+					data = append(data, fmt.Sprintf("%*d", maxWordsLength, result.Words))
+				}
+				if options.Chars {
+					data = append(data, fmt.Sprintf("%*d", maxCharLength, result.Chars))
+				}
+				if options.Bytes {
+					data = append(data, fmt.Sprintf("%*d", maxByteLength, result.Bytes))
+				}
+				if options.Width {
+					data = append(data, fmt.Sprintf("%*d", maxWidthLength, result.Width))
+				}
+				fmt.Fprintln(w, strings.Join(data, " "))
 			}
 		}
 	}
 
 	// Print totals.
-
-	if options.Totals == "never" {
-		return
-	}
 
 	if options.IsDefault() {
 		fmt.Fprintf(w, "%*d %*d %*d total\n", maxLinesLength, totalLines, maxWordsLength, totalWords, maxByteLength, totalBytes)
@@ -175,12 +168,7 @@ func reportMultipleFiles(results []input.WcResult, options options.WcOptions, w 
 			data = append(data, fmt.Sprintf("%*d", maxWidthLength, longestLine))
 		}
 
-		fmt.Fprint(w, strings.Join(data, " "))
-		if options.Totals == "only" {
-			fmt.Fprintln(w)
-		} else {
-			fmt.Fprintln(w, " total")
-		}
+		fmt.Fprintln(w, strings.Join(data, " "), "total")
 	}
 }
 

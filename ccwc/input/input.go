@@ -73,7 +73,6 @@ func ReadSingleReader(r *bufio.Reader) WcResult {
 			}
 			break
 		}
-		currentWidth += 1
 		result.Bytes += int64(size)
 		/*
 			GNU wc does not count encoding errors as characters.
@@ -91,6 +90,8 @@ func ReadSingleReader(r *bufio.Reader) WcResult {
 			result.Width = max(result.Width, currentWidth)
 			currentWidth = 0
 			result.Lines += 1
+		} else {
+			currentWidth += 1
 		}
 		/*
 			See the initialization of posixlyCorrect, above.

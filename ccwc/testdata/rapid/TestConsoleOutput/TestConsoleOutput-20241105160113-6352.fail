@@ -1,0 +1,13 @@
+# 2024/11/05 16:01:13.617849 [TestConsoleOutput] [rapid] draw t: []string{"--total=always"}
+# 2024/11/05 16:01:13.617849 [TestConsoleOutput] [rapid] draw o: []string{}
+# 2024/11/05 16:01:13.658641 [TestConsoleOutput] wc: unrecognized option `--total=always'
+# Try `wc --help' for more information.
+# 
+v0.4.8#6941458322003254282
+0x15555555555555
+0x0
+0x0
+0x0
+0x0
+0x0
+0x0
