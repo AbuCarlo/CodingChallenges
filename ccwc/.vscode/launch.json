@@ -10,15 +10,15 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}",
-            "args": ["-c", "test-files/Project Gutenberg - Art of War - UTF-8.txt", "test-files/Don Quixote.txt"]
+            "args": ["-c", "-m", "test-files/samples/Project Gutenberg - Art of War - UTF-8.txt", "test-files/samples/Don Quixote.txt"]
         },
         {
-            "name": "Read STDIN",
+            "name": "Read Long File",
             "type": "go",
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}",
-            "args": ["<", "${workspaceFolder}/test-files/hello.txt"]
+            "args": ["-c", "-m", "test-files/very-long-line.txt"]
         },
         {
             "name": "Test --help",

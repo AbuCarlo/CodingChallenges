@@ -76,6 +76,7 @@ func readSingleFileInternal(f string) WcResult {
 func readSingleReader(r *bufio.Reader) WcResult {
 	result := WcResult{}
 	for {
+		// TODO Replace all this with ReadRune().
 		// The delimiter is included in the return value. This allows us
 		// to emulate wc's behavior, which is to count a line only if it
 		// end with the delimiter, and not if it ends with EOF.
@@ -87,6 +88,7 @@ func readSingleReader(r *bufio.Reader) WcResult {
 		if len(s) > 0 {
 			result.Words += countWords(s)
 			// WARN The byte count from a string.Reader is always 0!
+			// WARN This number is simply wrong.
 			result.Bytes += int64(r.Buffered())
 			result.Chars += int64(len(s))
 			result.Width = max(len(s), result.Width)
