@@ -128,7 +128,6 @@ func countWords(s string) int {
 func printSingleFile(options WcOptions, w io.Writer, result WcResult) {
 	if options.IsDefault() {
 		// The long-standing default for wc: "newline, word, and byte counts"
-		// TODO Check source for wc and confirm that this is the format.
 		fmt.Fprintf(w, "%6d %6d %6d", result.Lines, result.Words, result.Bytes)
 		if result.FileName == "-" {
 			fmt.Fprintln(w)
