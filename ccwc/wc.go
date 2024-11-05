@@ -3,31 +3,21 @@ package main
 // -ldflags="-X 'main.Version=v1.0.0'"
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"io"
 	"os"
 	"runtime/debug"
 	"strings"
-	"unicode"
 
 	"golang.org/x/exp/constraints"
 
 	_ "embed"
 
 	"github.com/jessevdk/go-flags"
-)
 
-type WcResult struct {
-	FileName string
-	Bytes    int64
-	Chars    int64
-	Words    int
-	Lines    int
-	Width    int
-	err      error
-}
+	"anthonyabunassar.com/cc/wc/input"
+)
 
 type WcOptions struct {
 	Chars   bool `short:"m" long:"chars" description:"print the character counts"`
@@ -43,92 +33,7 @@ func (o WcOptions) IsDefault() bool {
 	return !o.Bytes && !o.Chars && !o.Lines && !o.Width && !o.Words
 }
 
-// TODO Move to separate package.
-func readSingleFileInternal(f string) WcResult {
-	var result WcResult
-	result.FileName = f
-	inputFile, err := os.Open(f)
-	if err != nil {
-		result.err = err
-		return result
-	}
-
-	var r *bufio.Reader
-	if f == "-" {
-		r = bufio.NewReader(os.Stdin)
-	} else {
-		// The default buffer size is 4K. Performance test?
-		// TODO https://www.reddit.com/r/golang/comments/i1cro6/on_choosing_a_buffer_size/
-		// TODO What it a line is longer than the buffer?
-		r = bufio.NewReaderSize(inputFile, 65536)
-	}
-
-	result = readSingleReader(r)
-	result.FileName = f
-
-	if err := inputFile.Close(); err != nil {
-		// TODO Do we care?
-		result.err = err
-	}
-
-	return result
-}
-
-func readSingleReader(r *bufio.Reader) WcResult {
-	result := WcResult{}
-	for {
-		// TODO Replace all this with ReadRune().
-		// The delimiter is included in the return value. This allows us
-		// to emulate wc's behavior, which is to count a line only if it
-		// end with the delimiter, and not if it ends with EOF.
-		s, err := r.ReadString('\n')
-		if err != nil && err != io.EOF {
-			result.err = err
-		}
-
-		if len(s) > 0 {
-			result.Words += countWords(s)
-			// WARN The byte count from a string.Reader is always 0!
-			// WARN This number is simply wrong.
-			result.Bytes += int64(r.Buffered())
-			result.Chars += int64(len(s))
-			result.Width = max(len(s), result.Width)
-			if s[len(s)-1] == '\n' {
-				result.Lines += 1
-
-			}
-		}
-
-		if err == io.EOF {
-			break
-		}
-	}
-	return result
-}
-
-func countWords(s string) int {
-	/*
-		From the man page: "A word is a non-zero-length sequence of characters delimited by white space.
-
-		Let's treat the first non-whitespace character of a line as being preceded by whitespace.
-	*/
-	wasWhitespace := true
-	words := 0
-	for _, r := range s {
-		if !unicode.IsSpace(r) {
-			if wasWhitespace {
-				words += 1
-			}
-			wasWhitespace = false
-		} else {
-			wasWhitespace = true
-		}
-	}
-	// We've already counted the last word on this line.
-	return words
-}
-
-func printSingleFile(options WcOptions, w io.Writer, result WcResult) {
+func printSingleFile(options WcOptions, w io.Writer, result input.WcResult) {
 	if options.IsDefault() {
 		// The long-standing default for wc: "newline, word, and byte counts"
 		fmt.Fprintf(w, "%6d %6d %6d", result.Lines, result.Words, result.Bytes)
@@ -179,7 +84,7 @@ func adjustPrintWidth(w int) int {
 	return w + 1
 }
 
-func printMultipleFiles(options WcOptions, results []WcResult, w io.Writer) {
+func printMultipleFiles(options WcOptions, results []input.WcResult, w io.Writer) {
 	if len(results) == 1 {
 		printSingleFile(options, os.Stdout, results[0])
 		return
@@ -211,7 +116,7 @@ func printMultipleFiles(options WcOptions, results []WcResult, w io.Writer) {
 		if options.IsDefault() {
 			// The long-standing default for wc: "newline, word, and byte counts"
 			fmt.Fprintf(w, "%*d %*d %*d", maxLinesLength, result.Lines, maxWordsLength, result.Words, maxByteLength, result.Bytes)
-			if result.FileName == "-" { 
+			if result.FileName == "-" {
 				fmt.Fprintln(w)
 			} else {
 				fmt.Fprintln(w, " ", result.FileName)
@@ -316,24 +221,24 @@ func main() {
 		os.Exit(0)
 	}
 
-	var channels []chan WcResult
+	var channels []chan input.WcResult
 	if len(files) == 0 {
-		result := readSingleFileInternal("-")
+		result := input.ReadSingleFileInternal("-")
 		printSingleFile(options, os.Stdout, result)
 		os.Exit(0)
 	}
 
 	for _, f := range files {
-		c := make(chan WcResult)
+		c := make(chan input.WcResult)
 		channels = append(channels, c)
 
 		go func(f string) {
-			c <- readSingleFileInternal(f)
+			c <- input.ReadSingleFileInternal(f)
 			close(c)
 		}(f)
 	}
 
-	var results []WcResult
+	var results []input.WcResult
 	for _, c := range channels {
 		result := <-c
 		results = append(results, result)
