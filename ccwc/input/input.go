@@ -121,9 +121,10 @@ func ReadSingleFileInternal(f string) WcResult {
 	if f == "-" || f == "" {
 		r = bufio.NewReader(os.Stdin)
 	} else {
-		// The default buffer size is 4K. Performance test?
-		// TODO https://www.reddit.com/r/golang/comments/i1cro6/on_choosing_a_buffer_size/
-		r = bufio.NewReaderSize(inputFile, 65536)
+		// The default buffer size is 4K. Nonetheless, wc uses the much larger
+		// buffer size frequently recommended for most architectures. See
+		// https://github.com/coreutils/coreutils/blob/master/src/ioblksize.h
+		r = bufio.NewReaderSize(inputFile, 262144)
 	}
 
 	result = ReadSingleReader(r)
