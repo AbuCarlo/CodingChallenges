@@ -16,24 +16,11 @@ import (
 	"github.com/jessevdk/go-flags"
 
 	"anthonyabunassar.com/coding-challenges/ccwc/input"
+	"anthonyabunassar.com/coding-challenges/ccwc/options"
+
 )
 
-type WcOptions struct {
-	Chars   bool   `short:"m" long:"chars" description:"print the character counts"`
-	Bytes   bool   `short:"c" long:"bytes" description:"print the byte counts"`
-	Lines   bool   `short:"l" long:"lines" description:"print the newline counts"`
-	Width   bool   `short:"L" long:"max-line-length" description:"print the maximum display width"`
-	Words   bool   `short:"w" long:"words" description:"print the word count"`
-	Totals  string `long:"totals" choice:"auto" choice:"always" choice:"only" choice:"never" default:"auto"`
-	Help    bool   `long:"help" description:"display this help and exit"`
-	Version bool   `long:"version" description:"output version information and exit"`
-}
-
-func (o WcOptions) IsDefault() bool {
-	return !o.Bytes && !o.Chars && !o.Lines && !o.Width && !o.Words
-}
-
-func reportSingleFile(options WcOptions, w io.Writer, result input.WcResult) {
+func reportSingleFile(result input.WcResult, options options.WcOptions, w io.Writer) {
 	if result.Error != nil {
 		fmt.Fprintf(os.Stderr, "ccwc: %s: %e\n", result.FileName, result.Error)
 		// TODO Print totals nonetheless?
@@ -90,9 +77,9 @@ func adjustIntegerOutputWidth(w int) int {
 	return w + 1
 }
 
-func reportMultipleFiles(options WcOptions, results []input.WcResult, w io.Writer) {
+func reportMultipleFiles(results []input.WcResult, options options.WcOptions, w io.Writer) {
 	if len(results) == 1 {
-		reportSingleFile(options, os.Stdout, results[0])
+		reportSingleFile(results[0], options, w)
 		return
 	}
 	// According to https://man7.org/linux/man-pages/man1/wc.1p.html
@@ -203,7 +190,7 @@ var gnuVersion string
 var ccVersion string
 
 func main() {
-	var options WcOptions
+	var options options.WcOptions
 	p := flags.NewParser(&options, 0)
 	p.Usage = gnuUsage
 	files, err := p.Parse()
@@ -225,11 +212,15 @@ func main() {
 		os.Exit(0)
 	}
 
+	ReadFiles(files, options, os.Stdout)
+}
+
+func ReadFiles(files []string, options options.WcOptions, w io.Writer) {
 	var channels []chan input.WcResult
 	if len(files) == 0 {
 		result := input.ReadSingleFileInternal("")
-		reportSingleFile(options, os.Stdout, result)
-		os.Exit(0)
+		reportSingleFile(result, options, w)
+		return
 	}
 
 	for _, f := range files {
@@ -248,7 +239,7 @@ func main() {
 		results = append(results, result)
 	}
 
-	reportMultipleFiles(options, results, os.Stdout)
+	reportMultipleFiles(results, options, w)
 }
 
 func printVersion() {
