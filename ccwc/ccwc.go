@@ -25,35 +25,45 @@ func reportSingleFile(result input.WcResult, options options.WcOptions, w io.Wri
 		fmt.Fprintf(os.Stderr, "ccwc: %s: %e\n", result.FileName, result.Error)
 		// TODO Print totals nonetheless?
 	}
-	// TODO Handle --totals==always and --totals==only
+	// TODO Handle --total==always and --total==only
 	if options.IsDefault() {
+		width := max(countDecimalChars(result.Lines), countDecimalChars(result.Words), countDecimalChars(result.Bytes))
 		// The long-standing default for wc: "newline, word, and byte counts"
-		fmt.Fprintf(w, "%6d %6d %6d", result.Lines, result.Words, result.Bytes)
+		fmt.Fprintf(w, "%*d %*d %*d", width, result.Lines, width, result.Words, width, result.Bytes)
 		// TODO This is not really right: "-" can appear on the command line.
 		if result.FileName == "-" {
 			fmt.Fprintln(w)
 		} else {
-			fmt.Fprintln(w, " ", result.FileName)
+			fmt.Fprintln(w, "", result.FileName)
 		}
 	} else {
-		var data []string
+		var values []int64
+
 		// From the wc help: "newline, word, character, byte, maximum line length"
 		if options.Lines {
-			data = append(data, fmt.Sprintf("%6d", result.Lines))
+			values = append(values, result.Lines)
 		}
 		if options.Words {
-			data = append(data, fmt.Sprintf("%6d", result.Words))
+			values = append(values, result.Words)
 		}
 		if options.Chars {
-			data = append(data, fmt.Sprintf("%6d", result.Chars))
+			values = append(values, result.Chars)
 		}
 		if options.Bytes {
-			data = append(data, fmt.Sprintf("%6d", result.Bytes))
+			values = append(values, result.Bytes)
 		}
 		if options.Width {
-			data = append(data, fmt.Sprintf("%6d", result.Width))
+			values = append(values, result.Width)
 		}
-		fmt.Fprintln(w, strings.Join(data, " "))
+		var largestValue int64
+		for _, v := range values {
+			largestValue = max(largestValue, v)
+		}
+		width := countDecimalChars(largestValue)
+		for _, v := range values {
+			fmt.Fprintf(w, "%*d ", width, v)
+		}
+		fmt.Fprintln(w, result.FileName)
 	}
 }
 
@@ -86,14 +96,14 @@ func reportMultipleFiles(results []input.WcResult, options options.WcOptions, w 
 	// "When any option is specified, wc shall report only the
 	// information requested by the specified options."
 	var totalWords, totalBytes, totalChars, totalLines int64
-	var longestLine int
+	var longestLine int64
 	// The minimum width for a number is 7 if we're going to print totals.
 	// See https://github.com/coreutils/coreutils/blob/0c9d372c96f2c7ce8c259c5563a48d1816fe611d/src/wc.c#L702
 	for _, result := range results {
 		totalBytes += result.Bytes
 		totalChars += result.Chars
-		totalLines += int64(result.Lines)
-		totalWords += int64(result.Words)
+		totalLines += result.Lines
+		totalWords += result.Words
 		longestLine = max(longestLine, result.Width)
 	}
 

@@ -50,13 +50,13 @@ func TestConsoleOutput(t *testing.T) {
 			stderr := err.(*exec.ExitError).Stderr
 			t.Fatal(string(stderr))
 		}
-		expected := string(out)
+        // GnuUtils on Windows output \r\n, but Go does not!
+		expected := strings.ReplaceAll(string(out), "\r\n", "\n")
 
 		wcOptions, files, _ := parseOptions(args)
 		builder := strings.Builder{}
 		ReadFiles(files, wcOptions, &builder)
 		actual := builder.String()
-
 		if actual != expected {
 			t.Errorf("%v failed.\nExpected:\n%s\nGot:\n%s\n", args, string(out), actual)
 		}

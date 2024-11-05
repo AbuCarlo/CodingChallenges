@@ -11,17 +11,17 @@ type WcResult struct {
 	FileName string
 	Bytes    int64
 	Chars    int64
-	Words    int
-	Lines    int
-	Width    int
-	Error      error
+	Words    int64
+	Lines    int64
+	Width    int64
+	Error    error
 }
 
 /*
 	From the documentation:
 
 	"Unless the environment variable POSIXLY_CORRECT is set, GNU wc treats the following Unicode characters
-	as white space even if the current locale does not: U+00A0 NO-BREAK SPACE, U+2007 FIGURE SPACE, 
+	as white space even if the current locale does not: U+00A0 NO-BREAK SPACE, U+2007 FIGURE SPACE,
 	U+202F NARROW NO-BREAK SPACE, and U+2060 WORD JOINER."
 */
 
@@ -57,7 +57,7 @@ func ReadSingleReader(r *bufio.Reader) WcResult {
 	result := WcResult{}
 	// The file begins on a "word boundary.""
 	precedingWhitespace := true
-	currentWidth := 0
+	currentWidth := int64(0)
 
 	for {
 
@@ -67,7 +67,7 @@ func ReadSingleReader(r *bufio.Reader) WcResult {
 				// TODO What is our plan here?
 				result.Error = err
 			} else {
-				// wc does not count EOF as the end of a word or a line, 
+				// wc does not count EOF as the end of a word or a line,
 				// but it might affect the maximum line width.
 				result.Width = max(result.Width, currentWidth)
 			}
@@ -75,7 +75,7 @@ func ReadSingleReader(r *bufio.Reader) WcResult {
 		}
 		currentWidth += 1
 		result.Bytes += int64(size)
-		/* 
+		/*
 			GNU wc does not count encoding errors as characters.
 
 			See also the documentation for bufio.Reader.ReadRune().
@@ -83,9 +83,9 @@ func ReadSingleReader(r *bufio.Reader) WcResult {
 		if r != '\ufffd' {
 			result.Chars += 1
 		}
-		
+
 		if r == '\n' {
-			/* 
+			/*
 				GNU wc counts \n characters. A file with no \n will have 0 "lines," per the documentation.
 			*/
 			result.Width = max(result.Width, currentWidth)
@@ -134,7 +134,7 @@ func ReadSingleFileInternal(f string) WcResult {
 
 	if err := inputFile.Close(); err != nil {
 		// At this point the error doesn't matter.
-		// Let's just output it later. 
+		// Let's just output it later.
 		result.Error = err
 	}
 

@@ -5,6 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Read hello.txt",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}",
+            "args": ["test-files/hello.txt"]
+        },
+        {
             "name": "Read Test Files",
             "type": "go",
             "request": "launch",

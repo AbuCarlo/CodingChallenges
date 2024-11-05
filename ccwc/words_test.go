@@ -13,7 +13,7 @@ import (
 func TestWordCount(t *testing.T) {
 	tests := []struct {
 		word     string
-		expected int
+		expected int64
 	}{
 		{"", 0},
 		{"               ", 0},
@@ -39,7 +39,7 @@ func TestWordCount(t *testing.T) {
 func TestLineCounts(t *testing.T) {
 	testCases := []struct {
 		input    string
-		expected int
+		expected int64
 	}{
 		{"Hello", 0},
 		{"Hello\n", 1},
@@ -62,7 +62,7 @@ func TestLongLine(t *testing.T) {
 		t.Fatal(err)
 	}
 	w := bufio.NewWriter(f)
-	size := 1000000
+	size := int64(1000000)
 	for range size {
 		w.WriteString("*")
 	}
