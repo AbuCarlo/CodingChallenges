@@ -37,6 +37,7 @@ func printSingleFile(options WcOptions, w io.Writer, result input.WcResult) {
 	if options.IsDefault() {
 		// The long-standing default for wc: "newline, word, and byte counts"
 		fmt.Fprintf(w, "%6d %6d %6d", result.Lines, result.Words, result.Bytes)
+		// TODO This is not really right: "-" can appear on the command line.
 		if result.FileName == "-" {
 			fmt.Fprintln(w)
 		} else {
@@ -223,7 +224,7 @@ func main() {
 
 	var channels []chan input.WcResult
 	if len(files) == 0 {
-		result := input.ReadSingleFileInternal("-")
+		result := input.ReadSingleFileInternal("")
 		printSingleFile(options, os.Stdout, result)
 		os.Exit(0)
 	}

@@ -89,7 +89,7 @@ func ReadSingleFileInternal(f string) WcResult {
 	}
 
 	var r *bufio.Reader
-	if f == "-" {
+	if f == "-" || f == "" {
 		r = bufio.NewReader(os.Stdin)
 	} else {
 		// The default buffer size is 4K. Performance test?
@@ -99,7 +99,9 @@ func ReadSingleFileInternal(f string) WcResult {
 	}
 
 	result = ReadSingleReader(r)
-	result.FileName = f
+	if f != "" {
+		result.FileName = f
+	}
 
 	if err := inputFile.Close(); err != nil {
 		// TODO Do we care?
