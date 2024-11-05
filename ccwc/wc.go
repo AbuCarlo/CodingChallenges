@@ -249,7 +249,12 @@ func main() {
 
 func printVersion() {
 	divider := "================================================================================"
-	// wc writes version informaton to standard output.
+	/*
+		wc writes version informaton to standard output.
+
+		wc --version > version.txt 2> version-error.txt
+	*/
+
 	fmt.Print(versionPreface)
 	fmt.Println()
 	fmt.Println(divider)
@@ -260,7 +265,7 @@ func printVersion() {
 	fmt.Println()
 	fmt.Println(divider)
 	fmt.Println()
-	// This string will already have a line ending.
+	// This string will already have a line ending if created by redirecting Git's output.
 	fmt.Printf("Golang version by Anthony A. Nassar: %s", ccVersion)
 	fmt.Printf("Built with Go version: %s\n", v.GoVersion)
 	fmt.Println()
