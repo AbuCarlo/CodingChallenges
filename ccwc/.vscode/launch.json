@@ -13,14 +13,6 @@
             "args": ["-c", "-m", "test-files/samples/Project Gutenberg - Art of War - UTF-8.txt", "test-files/samples/Don Quixote.txt"]
         },
         {
-            "name": "Read Long File",
-            "type": "go",
-            "request": "launch",
-            "mode": "auto",
-            "program": "${workspaceFolder}",
-            "args": ["-c", "-m", "test-files/very-long-line.txt"]
-        },
-        {
             "name": "Test --help",
             "type": "go",
             "request": "launch",

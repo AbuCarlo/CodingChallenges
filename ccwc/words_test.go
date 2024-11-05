@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 )
@@ -49,5 +50,27 @@ func TestLineCounts(t *testing.T) {
 				t.Errorf("Test Case %d expected %d; got %d", i, testCase.expected, result.Lines)
 			}
 		})
+	}
+}
+
+func TestLongLine(t *testing.T) {
+	// TODO Extract this to separate function.
+	f, err := os.CreateTemp("", "*.txt");
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	w := bufio.NewWriter(f)
+	size := 1000
+	for range size {
+		w.WriteString("*")
+	}
+	w.Flush()
+	f.Close()
+
+	expected := WcResult{FileName: f.Name(), Bytes: int64(size), Lines: 0, Chars: int64(size), Width: size}
+	actual := readSingleFileInternal(f.Name())
+	if actual != expected {
+		t.Errorf("Got %+v from generated file of %d characters.", actual, size)
 	}
 }

@@ -43,6 +43,7 @@ func (o WcOptions) IsDefault() bool {
 	return !o.Bytes && !o.Chars && !o.Lines && !o.Width && !o.Words
 }
 
+// TODO Move to separate package.
 func readSingleFileInternal(f string) WcResult {
 	var result WcResult
 	result.FileName = f
