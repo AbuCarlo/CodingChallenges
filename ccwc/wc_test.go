@@ -25,15 +25,15 @@ func TestConsoleOutput(t *testing.T) {
 		t.Run(fmt.Sprintf("Test %d", i), func(t *testing.T) {
 			out, err := exec.Command("wc", testCase...).Output()
 			if err != nil {
-                // You made a mistake.
+                // Something is wrong with the test, or wc is not on the path.
 				stderr := err.(*exec.ExitError).Stderr
 				t.Fatal(string(stderr))
-			} else {
-				fmt.Println(string(out))
 			}
 
+            // Command-line parsing has been externalized from main().
             options, files, err := parseOptions(testCase)
             if err != nil {
+                // Fix the test case. We're testing only valid options.
                 t.Fatal(err)
             }
 
@@ -46,8 +46,4 @@ func TestConsoleOutput(t *testing.T) {
             }
 		})
 	}
-
-	// TODO: Externalize command-line parsing.
 }
-
-// TODO Generate PBTs
