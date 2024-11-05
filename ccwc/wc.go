@@ -3,7 +3,6 @@ package main
 // -ldflags="-X 'main.Version=v1.0.0'"
 
 import (
-	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -210,8 +209,9 @@ func main() {
 	}
 
 	if options.Help {
-		// TODO What does wc do?
-		flag.CommandLine.Output().Write([]byte(gnuUsage))
+		// wc prints usage to standard output unless there's an error:
+		// https://github.com/coreutils/coreutils/blob/fbfda4df1a1f73b6e9e5e8bd00f2ddb06c6f219b/src/wc.c#L155
+		fmt.Print(gnuUsage)
 		os.Exit(0)
 	}
 
@@ -250,13 +250,19 @@ func main() {
 
 func printVersion() {
 	divider := "================================================================================"
+	// wc writes version informaton to standard output.
+	fmt.Print(versionPreface)
+	fmt.Println()
+	fmt.Println(divider)
+	fmt.Println()
 
-	flag.CommandLine.Output().Write([]byte(versionPreface))
-	flag.CommandLine.Output().Write([]byte(divider + "\n"))
 	v, _ := debug.ReadBuildInfo()
-	flag.CommandLine.Output().Write([]byte(gnuVersion))
-	flag.CommandLine.Output().Write([]byte(divider + "\n"))
-
-	flag.CommandLine.Output().Write([]byte("Golang version by Anthony A. Nassar: " + ccVersion))
-	flag.CommandLine.Output().Write([]byte("Built with Go version: " + v.GoVersion + "\n"))
+	fmt.Print(gnuVersion)
+	fmt.Println()
+	fmt.Println(divider)
+	fmt.Println()
+	// This string will already have a line ending.
+	fmt.Printf("Golang version by Anthony A. Nassar: %s", ccVersion)
+	fmt.Printf("Built with Go version: %s\n", v.GoVersion)
+	fmt.Println()
 }
