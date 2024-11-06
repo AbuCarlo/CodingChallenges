@@ -1,0 +1,16 @@
+# 2024/11/06 10:04:45.199662 [TestSingleFile] [rapid] draw o: []string{}
+# 2024/11/06 10:04:45.199662 [TestSingleFile] [rapid] draw f: []string{"test-files\\Gutenberg\\Art of War - Chinese - UTF-8.txt"}
+# 2024/11/06 10:04:45.238654 [TestSingleFile] [test-files\Gutenberg\Art of War - Chinese - UTF-8.txt] failed.
+# Expected:
+#   496  3145 42252 test-files\Gutenberg\Art of War - Chinese - UTF-8.txt
+# 
+# Got:
+#   496  3082 42252 test-files\Gutenberg\Art of War - Chinese - UTF-8.txt
+# 
+# 
+v0.4.8#15031994505035138138
+0x0
+0x0
+0x0
+0x0
+0x0
