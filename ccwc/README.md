@@ -26,5 +26,3 @@ I have deliberately replicated certain legacy features of `wc`, especially the o
 of bytes with characters. On a current Linux system, the encoding with almost certainly be UTF-8 
 (i.e. `LANG=C.UTF-8`), which is the default for Go. No provision has yet been made for other character
 encodings, or for BOM detection.
-
-### Versioning
