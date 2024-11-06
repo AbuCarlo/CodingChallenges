@@ -61,7 +61,7 @@ func ReadSingleReader(r *bufio.Reader) WcResult {
 
 	for {
 
-		r, size, err := r.ReadRune()
+		c, size, err := r.ReadRune()
 		if err != nil {
 			if err != io.EOF {
 				// TODO What is our plan here?
@@ -79,11 +79,11 @@ func ReadSingleReader(r *bufio.Reader) WcResult {
 
 			See also the documentation for bufio.Reader.ReadRune().
 		*/
-		if r != '\ufffd' {
+		if c != '\ufffd' {
 			result.Chars += 1
 		}
 
-		if r == '\n' {
+		if c == '\n' {
 			/*
 				GNU wc counts \n characters. A file with no \n will have 0 "lines," per the documentation.
 			*/
@@ -96,7 +96,7 @@ func ReadSingleReader(r *bufio.Reader) WcResult {
 		/*
 			See the initialization of posixlyCorrect, above.
 		*/
-		if unicode.IsSpace(r) || posixlyCorrect && (r == '\u2007' || r == '\u202f' || r == '\u2060') {
+		if unicode.IsSpace(c) || posixlyCorrect && (c == '\u2007' || c == '\u202f' || c == '\u2060') {
 			precedingWhitespace = true
 		} else {
 			if precedingWhitespace {
