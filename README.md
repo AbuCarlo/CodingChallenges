@@ -7,12 +7,9 @@ Cf. https://codingchallenges.substack.com/p/coding-challenge-1
 
 I started work on this on 2024-10-17. See folder `./ccwc`.
 
-This is still in development. Still to do:
-
-- Write parametrized tests to verify my output against known `wc` output.
-- Decide on help format for Windows vs. Unix.
-- Decide on a version string with copyright.
-- Test different encodings against GNU's `wc`.
-- Deal with long text files that will overrun the 64K buffer.
+This is still in development, which should really move to Unix, so that
+a strict comparison of my implementation to the canonical one will make sense.
+Otherwise, I'm relying on someone's outdated port of `coreutils` to Windows, 
+where expectations regarding encoding might be different.
 
 Update: I "shipped" this on 2024-11-06.
