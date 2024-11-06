@@ -1,7 +1,9 @@
 package main
 
 import (
+	"io/fs"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -22,18 +24,32 @@ var validArguments = []string{
 }
 
 func generateValidArgs(t *rapid.T) []string {
-	args := rapid.SliceOfDistinct(rapid.SampledFrom(validArguments), func(s string) string { return s }).Draw(t, "o")
-	return args
+	// Return 0 or more arguments in any order.
+	return rapid.SliceOfDistinct(rapid.SampledFrom(validArguments), func(s string) string { return s }).Draw(t, "o")
 }
 
-func TestConsoleOutput(t *testing.T) {
-	inputs := []string{
-		"./test-files/hello.txt",
-	}
+var validInputs []string
 
+func init() {
+	filepath.WalkDir("./test-files", func(path string, d fs.DirEntry, err error) error {
+		if d.IsDir() {
+			return nil
+		}
+		validInputs = append(validInputs, path)
+		return nil
+	})
+}
+
+func generateSingleInputFile(t *rapid.T) string {
+	slice := rapid.SliceOfN(rapid.SampledFrom(validInputs), 1, 1).Draw(t, "f")
+	return slice[0]
+}
+
+func TestSingleFile(t *testing.T) {
 	rapid.Check(t, func(t *rapid.T) {
 		args := generateValidArgs(t)
-		args = append(args, inputs...)
+		file := generateSingleInputFile(t)
+		args = append(args, file)
 		out, err := exec.Command("wc", args...).Output()
 		if err != nil {
 			// Something is wrong with the test, or wc is not on $PATH.
