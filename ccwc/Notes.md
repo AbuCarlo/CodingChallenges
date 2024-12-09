@@ -121,8 +121,8 @@ Large books:
 ```
 
 What does `wc` do if `-` is given as a file name (meaning standard input)?
-You can see that the first call had to be killed. The second works (the
-filename is listed in the totals as "-")
+You can see that the first call had to be killed, just as for `wc`. The second
+works (the filename is correctly listed in the totals as "-").
 
 ```bash
 [ec2-user@ip-172-31-52-82 ~]$ wc 'Art of War - English - UTF-8.txt' - 
